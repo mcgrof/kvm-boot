@@ -69,7 +69,8 @@ function parse_args()
 			parse_args $@
 			;;
 		"-l")
-			parse_args $@
+			ls -R $ISO_PATH
+			exit
 			;;
 		*)
 			;;
