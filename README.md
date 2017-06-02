@@ -390,6 +390,75 @@ work flow you can consier copying over the file install-next-kernel.sh and
 using that when installing your kernels, it will make sure to always remove
 old linux-next instances, while keeping your distribution kernels.
 
+Tips and tricks
+----------------
+
+Below are list of collection of tips and tricks which may help you further
+in either diagnosign issues or help you with your development setup.
+
+# Determing what tty properties to use
+
+If you run into issues with your tty settings and qemu (know that qemu tty can
+be buggy), you can use stty to query tty settings that you should use in case
+what you have specified on boot through grub did not go through for on reason
+or another.
+
+	root@piggy:~# stty -F /dev/ttyS1
+	speed 115200 baud; line = 0;
+	-brkint ixoff -imaxbel iutf8
+	-iexten
+
+This confirms that my ttyS1 was setup correctly as I expected it with 115200
+baud rate. If this is different from what you specified on your grub
+configuration this may be why you are having issues.
+
+# Testing kernel suspend / resume with qemu for kernel development
+
+Often you may need to test suspend / resume on a target guest. The following
+tips should help you get this done easily. First let's pretend we got the
+following from kvm-boot on stdout. Note, that if you used GRUB_TERMINAL=serial
+or GRUB_TERMINAL=console you will have your immediate stdout contended with
+the grub prompt so there will be only a small period of time you could capture
+this output:
+
+	Going to boot directly onto image disk
+	qemu-system-x86_64: -monitor pty: char device redirected to /dev/pts/9 (label compat_monitor0)
+	qemu-system-x86_64: -chardev pty,id=ttyS1: char device redirected to /dev/pts/11 (label ttyS1)
+	qemu-system-x86_64: -chardev pty,id=ttyS2: char device redirected to /dev/pts/12 (label ttyS2)
+
+This tells you, that you can control the qemu guest via the qemu monitor
+interface using /dev/pts/9. To trigger a suspend on a guest you either use the
+respective userspace tools depending on what init system is used:
+
+	# Old init
+	root@piggy:~# pm-suspend
+	# On systemd, suspends to ram
+
+	# These may fail.. enabled via distro choice it seems ?
+	root@piggy:~# systemctl hibernate
+	Failed to hibernate system via logind: Sleep verb not supported
+	root@piggy:~# systemctl hybrid-sleep
+	Failed to put system into hybrid sleep via logind: Sleep verb not supported
+
+If you want to disregard the preferred userspace tool way, you can do force
+suspend to ram or disk as follows:
+
+	# To query what options are available
+	root@piggy:~# cat /sys/power/state
+	freeze mem disk
+
+	# To trigger suspend to ram
+	root@piggy:~# echo mem > /sys/power/state
+
+	# To resume the target, from your hypervisor you can issue the following
+	# command to the pts on the control interface for the qemu instance,
+	# note that this qemu interface may be a bit buggy and often you may
+	# need to issue this command up to 4 times:
+	$ echo system_wakeup | socat - /dev/pts/9,raw,echo=0,crnl
+
+	# I guess this is hibernate, however my targets immediately resume.
+	root@piggy:~# echo disk > /sys/power/state
+
 TODO
 ----
 
@@ -397,3 +466,10 @@ TODO
     testing.
   * Make sure the above intructions work for most distributions and adjust as
     needed
+  * If a target uses GRUB_TERMINAL=serial or GRUB_TERMINAL=console you will
+    have your immediate stdout contended with the grub prompt so there will be
+    only a small period of time you could capture the output of the actually
+    used pts for each serial console and qemu control interface. This means
+    one often has to CTRL-C and restart the command until one was able to
+    capture the output somehow. We should instead redirect this to a file
+    somehow or figure out a nice way to query this from the process spawned?
