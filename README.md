@@ -93,6 +93,7 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
   * CPUS: number of CPUs to use
   * KERNEL_APPEND: set of kernel parameters to use when booting using the
     direct file mechanism
+  * KVM_BOOT: main KVM guest boot command to issue
 
 Requirements
 ------------

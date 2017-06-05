@@ -70,6 +70,33 @@ KERNEL=""
 USE_KERNEL=""
 USE_INITRD=""
 
+function set_kvm_boot()
+{
+	if [ -z $KVM_BOOT ]; then
+		KVM_BOOT=(
+			$QEMU
+			-cpu kvm64
+			-enable-kvm
+			$USE_KERNEL
+			-m $MEM
+			-smp $CPUS
+			-netdev vde,sock=$VDE_SOCKET,group=kvm,mode=0660,id=vde0
+			-device e1000,netdev=vde0,mac=52:54:00:12:34:84
+			$USE_TARGET
+			$USE_NEXT_TARGET
+			-monitor pty
+			-serial stdio
+			-chardev pty,id=ttyS1
+			-device isa-serial,chardev=ttyS1
+			-chardev pty,id=ttyS2
+			-device isa-serial,chardev=ttyS2
+			-nographic
+			$USE_INITRD
+			-boot order=d
+		)
+	fi
+}
+
 function usage()
 {
 	echo -e "Usage $0 [ -d | -b | -l | -k /boot/some-kernel-vmlinuz ]"
@@ -205,27 +232,7 @@ else
 	parse_args $@
 fi
 
-KVM_BOOT=(
-	$QEMU
-	-cpu kvm64
-	-enable-kvm
-	$USE_KERNEL
-	-m $MEM
-	-smp $CPUS
-	-netdev vde,sock=$VDE_SOCKET,group=kvm,mode=0660,id=vde0
-	-device e1000,netdev=vde0,mac=52:54:00:12:34:84
-	$USE_TARGET
-	$USE_NEXT_TARGET
-	-monitor pty
-	-serial stdio
-	-chardev pty,id=ttyS1
-	-device isa-serial,chardev=ttyS1
-	-chardev pty,id=ttyS2
-	-device isa-serial,chardev=ttyS2
-	-nographic
-	$USE_INITRD
-	-boot order=d
-)
+set_kvm_boot
 
 if [[ "$USE_KERNEL" == "" ]]; then
 	echo $USE_KERNEL
