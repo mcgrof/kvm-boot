@@ -205,7 +205,7 @@ else
 	parse_args $@
 fi
 
-kvm=(
+KVM_BOOT=(
 	$QEMU
 	-cpu kvm64
 	-enable-kvm
@@ -231,9 +231,9 @@ if [[ "$USE_KERNEL" == "" ]]; then
 	echo $USE_KERNEL
 	echo "Going to boot directly onto image disk"
 	echo "---------------------------------------"
-	"${kvm[@]}"
+	"${KVM_BOOT[@]}"
 else
 	echo "Going to boot custom kernel"
 	echo "---------------------------"
-	"${kvm[@]}" --append "${KERNEL_APPEND[*]}"
+	"${KVM_BOOT[@]}" --append "${KERNEL_APPEND[*]}"
 fi
