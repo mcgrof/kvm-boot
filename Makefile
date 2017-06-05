@@ -1,4 +1,4 @@
-install: setup-switch kvm-boot
+install: guest-install setup-kvm-switch kvm-boot
 	mkdir -p ~/bin/
 	cp setup-kvm-switch ~/bin/
 	cp kvm-boot ~/bin/
