@@ -61,9 +61,32 @@ Raw image boot:
 
 	$ kvm-boot -b
 
+Raw image boot using a specific main image and custom secondary development
+disk:
+
+	$ kvm-boot -t /opt/qemu/some.img -n /opt/qemu/linux-next.qcow2
+
 Additionally if you are working on qemu development you can always use:
 
 	$ kvm-boot -d # use $HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64
+
+# Overriding defaults with environment variables
+
+You can override many default parameters by just using environment variables.
+The list of variables you can override are viewable on the function
+allow_user_defaults() on kvm-boot, we list them and document them here:
+
+  * VDE_SOCKET: qemu socket to when vde2 is used for networking
+  * QEMU: qemu binary to use
+  * TARGET: primary target qcow2 image to use for boot disk
+  * USE_TARGET: enables specifying precise disk parameter to use for primary
+    boot disk
+  * NEXT_TARGET: secondary development disk to use, where you have your git
+    git trees and you compile your kernels
+  * USE_NEXT_TARGET: enables specifying precise disk parameter to use for qemu
+    for the secondary development disk
+  * MEM: amount of memory to use in MiB
+  * CPUS: number of CPUs to use
 
 Requirements
 ------------
@@ -358,7 +381,7 @@ distribution so that the grub configuration files get updated.
 Provided you could setup all the above correctly you should be ready to go.
 Try now:
 
-	$ kvm-boot -t /opt/qemu/some.img -n /opt/qemu/linux-next2.qcow2
+	$ kvm-boot -t /opt/qemu/some.img -n /opt/qemu/linux-next.qcow2
 
 You should see something like this on stdout:
 

@@ -5,23 +5,46 @@
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
-VDE_SOCKET="/var/run/qemu-vde.ctl"
+function allow_user_defaults()
+{
+	if [ -z $VDE_SOCKET ]; then
+		VDE_SOCKET="/var/run/qemu-vde.ctl"
+	fi
+
+	if [ -z $QEMU ]; then
+		QEMU=$(which qemu-system-x86_64)
+	fi
+
+	if [ -z $TARGET ]; then
+		TARGET="/opt/qemu/opensuse-leap-42.2.img"
+	fi
+
+	if [ -z $USE_TARGET ]; then
+		USE_TARGET="-hda $TARGET"
+	fi
+
+	if [ -z $NEXT_TARGET ]; then
+		NEXT_TARGET="/opt/qemu/linux-next.qcow2"
+	fi
+
+	if [ -z $USE_NEXT_TARGET ]; then
+		USE_NEXT_TARGET="-hdb $NEXT_TARGET"
+	fi
+
+	if [ -z $MEM ]; then
+		MEM="4096"
+	fi
+
+	if [ -z $CPUS ]; then
+		CPUS="4"
+	fi
+}
+
 KERNEL=""
-QEMU=$(which qemu-system-x86_64)
 USE_KERNEL=""
 USE_INITRD=""
 USE_APPEND=""
 
-NEXT_TARGET="/opt/qemu/linux-next.qcow2"
-USE_NEXT_TARGET="-hdb $NEXT_TARGET"
-
-TARGET="/opt/qemu/opensuse-leap-42.2.img"
-#TARGET=/opt/qemu/debian-x86_64.qcow2
-USE_TARGET="-hda $TARGET"
-
-QEMU=$(which qemu-system-x86_64)
-MEM="4096"
-CPUS="4"
 # Only used if you are asking to boot into a specific development kernel
 append=(
 	debug
@@ -174,6 +197,8 @@ function parse_args()
 			;;
 	esac
 }
+
+allow_user_defaults
 
 if [[ $# -eq 0 ]]; then
 	infer_latest_kernel
