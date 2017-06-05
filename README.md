@@ -73,6 +73,10 @@ Additionally if you are working on qemu development you can always use:
 # Overriding defaults with environment variables
 
 You can override many default parameters by just using environment variables.
+We enable this mechanism to be able to allow for customizations without
+expanding on the number of supported arguments for all possible parameters we
+may pass to qemu.
+
 The list of variables you can override are viewable on the function
 allow_user_defaults() on kvm-boot, we list them and document them here:
 
@@ -87,6 +91,8 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
     for the secondary development disk
   * MEM: amount of memory to use in MiB
   * CPUS: number of CPUs to use
+  * KERNEL_APPEND: set of kernel parameters to use when booting using the
+    direct file mechanism
 
 Requirements
 ------------

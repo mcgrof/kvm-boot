@@ -38,37 +38,37 @@ function allow_user_defaults()
 	if [ -z $CPUS ]; then
 		CPUS="4"
 	fi
+
+	if [ -z $KERNEL_APPEND ]; then
+		# Only used if you are asking to boot into a specific
+		# development kernel
+		KERNEL_APPEND=(
+			debug
+			audit=0
+			load_ramdisk=2
+			root=/dev/sda1
+			# WTF 'stty -F /dev/ttyS0 -a' reports one thing, yet
+			# 'dmesg| grep tty' reports another. I give up, this
+			# should work... best bet is just to get networking
+			# working.  For details on tty issues:
+			# see: https://lists.gnu.org/archive/html/qemu-devel/2013-06/msg01507.html
+			console=ttyS0,115200n
+			console=tty0
+			vga=normal
+			dyndbg=\"file firmware_class.c +p\; file arch/x86/kernel/init.c +p\"
+			rw
+			drbd.minor_count=8
+			max_part=63
+			#cgroup_no_v1=all
+			#cgroup_disable=all
+			#ipv6.disable_ipv6_mod=1
+		)
+	fi
 }
 
 KERNEL=""
 USE_KERNEL=""
 USE_INITRD=""
-
-# Only used if you are asking to boot into a specific development kernel
-KERNEL_APPEND=(
-	debug
-	audit=0
-	load_ramdisk=2
-	root=/dev/sda1
-	# WTF
-	# 'stty -F /dev/ttyS0 -a' reports one thing, yet 'dmesg| grep tty'
-	# reports another. I give up, this should work... best bet is just
-	# to get networking working.
-	# For details on tty issues:
-	# see: https://lists.gnu.org/archive/html/qemu-devel/2013-06/msg01507.html
-	console=ttyS0,115200n
-	console=tty0
-	vga=normal
-	dyndbg=\"file firmware_class.c +p\; file arch/x86/kernel/init.c +p\"
-	rw
-	drbd.minor_count=8
-	max_part=63
-	#cgroup_no_v1=all
-	#cgroup_disable=all
-	#ipv6.disable_ipv6_mod=1
-)
-
-# No need to edit anything else below
 
 function usage()
 {
