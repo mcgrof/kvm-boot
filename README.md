@@ -118,11 +118,11 @@ a few basic ones you might need to change for now.
   * KVM_BOOT_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
     defaults to /var/lib/dnsmasq/
 
-# Overriding defaults with environment variables for guest-install
+# Overriding defaults with environment variables for install-kvm-guest
 
-As an alternative to using command like arguments with guest-install you can
-use environment variables. Some of the basic environment variables used for
-kvm-boot are also used with guest-install.
+As an alternative to using command like arguments with install-kvm-guest you
+can use environment variables. Some of the basic environment variables used for
+kvm-boot are also used with install-kvm-guest.
 
   * KVM_BOOT_KVM_BOOT_ISO_PATH: path where your isos are located
   * KVM_BOOT_ISO: ISO to use for installation
@@ -334,15 +334,15 @@ To copy over the linux sources you can do from the host:
 This image is exposed to the kvm-boot guest kernel we boot later as a secondary
 disk, using qemu -hdb parameter.
 
-## guest-install
+## install-kvm-guest
 
-guest-install scripts can help you install an ISO image onto a target qcow2
+install-kvm-guest scripts can help you install an ISO image onto a target qcow2
 image file, with a fully functionaly network in place, and exposing the
 linux-next development target image as a secondary disk. Example use:
 
-	$ ./guest-install -i /opt/isos/some.iso \
-			  -t /opt/qemu/some.img \
-			  -n /opt/qemu/linux-next.qcow2
+	$ ./install-kvm-guest -i /opt/isos/some.iso \
+			      -t /opt/qemu/some.img \
+			      -n /opt/qemu/linux-next.qcow2
 
 That will by defalut use SDL to kick off your installation. Follow the steps to
 install the guest, be sure to install and enable SSH, some distros disable this
@@ -357,9 +357,9 @@ to modify the fact that you just want the larger disk to be used for a home
 subdirectory for you. So you may want to just skip the -n option and use: -n
 none:
 
-	$ ./guest-install -i /opt/isos/some.iso \
-			  -t /opt/qemu/some.img \
-			  -n none
+	$ ./install-kvm-guest -i /opt/isos/some.iso \
+			      -t /opt/qemu/some.img \
+			      -n none
 
 If you do this can later expose the disk on a second boot and configure it to
 be mounted on $HOME/$USER/data as follows on /etc/fstab:
@@ -377,10 +377,10 @@ linux-next.qcow2 file.
 
 ## Preparing for first kvm-boot use on guest
 
-Once you are done with the installation of the guest there are a few more things
-you will want to set up to be a happy camper Linux developer using kvm-boot,
-you can set these up using the same guest-install script as described above
-and booting from the hard disk.
+Once you are done with the installation of the guest there are a few more
+things you will want to set up to be a happy camper Linux developer using
+kvm-boot, you can set these up using the same install-kvm-guest script as
+described above and booting from the hard disk.
 
 You will want to do the following:
 
