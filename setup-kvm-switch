@@ -147,9 +147,10 @@ setup_nat() {
 	add_filter_rules "$1"
 }
 
+allow_user_defaults
+
 echo Setting up switch on $KVM_TAP_DEV
 
-allow_user_defaults
 start_vdeswitch
 do_ifconfig $KVM_TAP_DEV "$KVM_GATEWAY" netmask "$KVM_NETMASK" up
 
