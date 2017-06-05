@@ -25,7 +25,7 @@ Setup
 
 When you decide you need to spawn guests just run this prior to spawning guests:
 
-	$ sudo ~/bin/setup-switch
+	$ sudo ~/bin/setup-kvm-switch
 
 You may need to edit the file to replace WIRELESS_DEV variable for whatever
 your actual networking interface is.
@@ -70,7 +70,7 @@ Additionally if you are working on qemu development you can always use:
 
 	$ kvm-boot -d # use $HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64
 
-# Overriding defaults with environment variables
+# Overriding defaults with environment variables for kvm-boot
 
 You can override many default parameters by just using environment variables.
 We enable this mechanism to be able to allow for customizations without
@@ -94,6 +94,29 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
   * KERNEL_APPEND: set of kernel parameters to use when booting using the
     direct file mechanism
   * KVM_BOOT: main KVM guest boot command to issue
+
+# Overriding defaults with environment variables for setup-kvm-switch
+
+Network configuration support is provided by setting up a switch using one
+of you networking interfaces which has network connectivity, and using dnsmasq
+for the guests on it. You can configure different options for the switch by
+using custom variables on your environment for setup. We document below only
+a few basic ones you might need to change for now.
+
+  * KVM_NETDEV: you will very likely need to modify this unless wlp3s0 also
+    happens to be your main networking interface.
+  * KVM_TAP_DEV: name of the tapdev you will want to use for the switch setup.
+    You might only need to change this if you happen to for example using tun
+    already for an existing VPN network you always have running. The default is
+    tap0.
+  * KVM_NETWORK: address for your guests network. The default is 192.168.53.0
+  * KVM_NETMASK: netmask for your guest network. The default is 255.255.255.0.
+  * KVM_GATEWAY: gateway IP address you want to use for your guest network,
+    don't worry we'll configure things for you. The default is 192.168.53.1.
+  * KVM_DHCPRANGE: the DCHP range you wish to use. The default setting is
+    192.168.53.2,192.168.53.254
+  * KVM_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
+    defaults to /var/lib/dnsmasq/
 
 Requirements
 ------------
