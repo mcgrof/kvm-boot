@@ -43,10 +43,9 @@ function allow_user_defaults()
 KERNEL=""
 USE_KERNEL=""
 USE_INITRD=""
-USE_APPEND=""
 
 # Only used if you are asking to boot into a specific development kernel
-append=(
+KERNEL_APPEND=(
 	debug
 	audit=0
 	load_ramdisk=2
@@ -236,5 +235,5 @@ if [[ "$USE_KERNEL" == "" ]]; then
 else
 	echo "Going to boot custom kernel"
 	echo "---------------------------"
-	"${kvm[@]}" --append "${append[*]}"
+	"${kvm[@]}" --append "${KERNEL_APPEND[*]}"
 fi
