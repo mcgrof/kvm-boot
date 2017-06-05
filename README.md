@@ -103,19 +103,19 @@ for the guests on it. You can configure different options for the switch by
 using custom variables on your environment for setup. We document below only
 a few basic ones you might need to change for now.
 
-  * KVM_NETDEV: you will very likely need to modify this unless wlp3s0 also
+  * KVM_BOOT_NETDEV: you will very likely need to modify this unless wlp3s0 also
     happens to be your main networking interface.
-  * KVM_TAP_DEV: name of the tapdev you will want to use for the switch setup.
+  * KVM_BOOT_TAP_DEV: name of the tapdev you will want to use for the switch setup.
     You might only need to change this if you happen to for example using tun
     already for an existing VPN network you always have running. The default is
     tap0.
-  * KVM_NETWORK: address for your guests network. The default is 192.168.53.0
-  * KVM_NETMASK: netmask for your guest network. The default is 255.255.255.0.
-  * KVM_GATEWAY: gateway IP address you want to use for your guest network,
+  * KVM_BOOT_NETWORK: address for your guests network. The default is 192.168.53.0
+  * KVM_BOOT_NETMASK: netmask for your guest network. The default is 255.255.255.0.
+  * KVM_BOOT_GATEWAY: gateway IP address you want to use for your guest network,
     don't worry we'll configure things for you. The default is 192.168.53.1.
-  * KVM_DHCPRANGE: the DCHP range you wish to use. The default setting is
+  * KVM_BOOT_DHCPRANGE: the DCHP range you wish to use. The default setting is
     192.168.53.2,192.168.53.254
-  * KVM_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
+  * KVM_BOOT_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
     defaults to /var/lib/dnsmasq/
 
 Requirements

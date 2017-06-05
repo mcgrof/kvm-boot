@@ -7,52 +7,52 @@
 
 function allow_user_defaults()
 {
-	if [ -z $KVM_NETDEV ]; then
-		KVM_NETDEV=wlp3s0
+	if [ -z $KVM_BOOT_NETDEV ]; then
+		KVM_BOOT_NETDEV=wlp3s0
 	fi
 
-	if [ -z $KVM_TAP_DEV ]; then
-		KVM_TAP_DEV=tap0
+	if [ -z $KVM_BOOT_TAP_DEV ]; then
+		KVM_BOOT_TAP_DEV=tap0
 	fi
 
 	# Network information, these are sane values, you can keep them
 	# unless they intefere with your network, ie, if you already make use
 	# of this subnet. If you don't use this subnet it should be fine.
-	if [ -z $KVM_NETWORK ]; then
-		KVM_NETWORK=192.168.53.0
+	if [ -z $KVM_BOOT_NETWORK ]; then
+		KVM_BOOT_NETWORK=192.168.53.0
 	fi
 
-	if [ -z $KVM_NETMASK ]; then
-		KVM_NETMASK=255.255.255.0
+	if [ -z $KVM_BOOT_NETMASK ]; then
+		KVM_BOOT_NETMASK=255.255.255.0
 	fi
 
-	if [ -z $KVM_GATEWAY ]; then
-		KVM_GATEWAY=192.168.53.1
+	if [ -z $KVM_BOOT_GATEWAY ]; then
+		KVM_BOOT_GATEWAY=192.168.53.1
 	fi
 
-	if [ -z $KVM_DHCPRANGE ]; then
-		KVM_DHCPRANGE=192.168.53.2,192.168.53.254
+	if [ -z $KVM_BOOT_DHCPRANGE ]; then
+		KVM_BOOT_DHCPRANGE=192.168.53.2,192.168.53.254
 	fi
 
-	if [ -z $KVM_DNSMASQ_RUN_DIR ]; then
-		KVM_DNSMASQ_RUN_DIR=/var/lib/dnsmasq/
+	if [ -z $KVM_BOOT_DNSMASQ_RUN_DIR ]; then
+		KVM_BOOT_DNSMASQ_RUN_DIR=/var/lib/dnsmasq/
 	fi
 
-	if [ -z $KVM_DNSMASQ_PID ]; then
-		KVM_DNSMASQ_PID=$KVM_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_TAP_DEV.pid
+	if [ -z $KVM_BOOT_DNSMASQ_PID ]; then
+		KVM_BOOT_DNSMASQ_PID=$KVM_BOOT_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_BOOT_TAP_DEV.pid
 	fi
 
-	if [ -z $KVM_DNSMASQ_LEASE ]; then
-		KVM_DNSMASQ_LEASE=$KVM_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_TAP_DEV.leases
+	if [ -z $KVM_BOOT_DNSMASQ_LEASE ]; then
+		KVM_BOOT_DNSMASQ_LEASE=$KVM_BOOT_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_BOOT_TAP_DEV.leases
 	fi
 
 	# Optionally parameters to enable PXE support
-	if [ -z $KVM_TFTPROOT ]; then
-		KVM_TFTPROOT=
+	if [ -z $KVM_BOOT_TFTPROOT ]; then
+		KVM_BOOT_TFTPROOT=
 	fi
 
-	if [ -z $KVM_BOOTP ]; then
-		KVM_BOOTP=
+	if [ -z $KVM_BOOT_BOOTP ]; then
+		KVM_BOOT_BOOTP=
 	fi
 }
 
@@ -95,7 +95,7 @@ flush_tables()
 add_filter_rules()
 {
 	flush_tables
-	iptables -t nat -A POSTROUTING -s $KVM_NETWORK/24 -o $KVM_NETDEV -j MASQUERADE
+	iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 }
 
 start_dnsmasq() {
@@ -104,16 +104,16 @@ start_dnsmasq() {
 	--log-queries \
 	--except-interface=lo \
 	--interface=$1 \
-	--listen-address=$KVM_GATEWAY \
+	--listen-address=$KVM_BOOT_GATEWAY \
 	--bind-interfaces \
-	--dhcp-range=$KVM_DHCPRANGE \
+	--dhcp-range=$KVM_BOOT_DHCPRANGE \
 	--conf-file="" \
 	--dhcp-no-override \
-	${KVM_TFTPROOT:+"--enable-tftp"} \
-	${KVM_TFTPROOT:+"--tftp-root=$KVM_TFTPROOT"} \
-	${KVM_BOOTP:+"--dhcp-boot=$KVM_BOOTP"}
-	#--dhcp-leasefile=$KVM_DNSMASQ_LEASE \
-	#--pid-file=$KVM_DNSMASQ_PID \
+	${KVM_BOOT_TFTPROOT:+"--enable-tftp"} \
+	${KVM_BOOT_TFTPROOT:+"--tftp-root=$KVM_BOOT_TFTPROOT"} \
+	${KVM_BOOT_BOOTP:+"--dhcp-boot=$KVM_BOOT_BOOTP"}
+	#--dhcp-leasefile=$KVM_BOOT_DNSMASQ_LEASE \
+	#--pid-file=$KVM_BOOT_DNSMASQ_PID \
 }
 
 check_vdeswitch()
@@ -134,7 +134,7 @@ do_vdeswitch() {
 start_vdeswitch() {
     do_vdeswitch \
 	-hub \
-	-tap $KVM_TAP_DEV \
+	-tap $KVM_BOOT_TAP_DEV \
 	-mod 660 \
 	-group kvm \
 	-s /var/run/qemu-vde.ctl \
@@ -149,10 +149,10 @@ setup_nat() {
 
 allow_user_defaults
 
-echo Setting up switch on $KVM_TAP_DEV
+echo Setting up switch on $KVM_BOOT_TAP_DEV
 
 start_vdeswitch
-do_ifconfig $KVM_TAP_DEV "$KVM_GATEWAY" netmask "$KVM_NETMASK" up
+do_ifconfig $KVM_BOOT_TAP_DEV "$KVM_BOOT_GATEWAY" netmask "$KVM_BOOT_NETMASK" up
 
-setup_nat $KVM_TAP_DEV
-start_dnsmasq $KVM_TAP_DEV
+setup_nat $KVM_BOOT_TAP_DEV
+start_dnsmasq $KVM_BOOT_TAP_DEV
