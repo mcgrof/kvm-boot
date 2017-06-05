@@ -118,6 +118,15 @@ a few basic ones you might need to change for now.
   * KVM_BOOT_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
     defaults to /var/lib/dnsmasq/
 
+# Example minimum .bashrc settings
+
+You really might only need to set thes on your .bashrc to get this to work right
+away:
+
+	export KVM_BOOT_NETDEV=eth0
+	export KVM_BOOT_TARGET=/opt/qemu/debian-x86_64.qcow2
+	export KVM_BOOT_NEXT_TARGET=/opt/qemu/mcgrof-dev-20170605.img
+
 Requirements
 ------------
 
