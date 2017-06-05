@@ -118,6 +118,15 @@ a few basic ones you might need to change for now.
   * KVM_BOOT_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
     defaults to /var/lib/dnsmasq/
 
+# Overriding defaults with environment variables for guest-install
+
+As an alternative to using command like arguments with guest-install you can
+use environment variables. Some of the basic environment variables used for
+kvm-boot are also used with guest-install.
+
+  * KVM_BOOT_KVM_BOOT_ISO_PATH: path where your isos are located
+  * KVM_BOOT_ISO: ISO to use for installation
+
 # Example minimum .bashrc settings
 
 You really might only need to set thes on your .bashrc to get this to work right
