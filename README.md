@@ -80,18 +80,18 @@ may pass to qemu.
 The list of variables you can override are viewable on the function
 allow_user_defaults() on kvm-boot, we list them and document them here:
 
-  * VDE_SOCKET: qemu socket to when vde2 is used for networking
-  * QEMU: qemu binary to use
-  * TARGET: primary target qcow2 image to use for boot disk
-  * USE_TARGET: enables specifying precise disk parameter to use for primary
-    boot disk
-  * NEXT_TARGET: secondary development disk to use, where you have your git
-    git trees and you compile your kernels
-  * USE_NEXT_TARGET: enables specifying precise disk parameter to use for qemu
-    for the secondary development disk
-  * MEM: amount of memory to use in MiB
-  * CPUS: number of CPUs to use
-  * KERNEL_APPEND: set of kernel parameters to use when booting using the
+  * KVM_BOOT_VDE_SOCKET: qemu socket to when vde2 is used for networking
+  * KVM_BOOT_QEMU: qemu binary to use
+  * KVM_BOOT_TARGET: primary target qcow2 image to use for boot disk
+  * KVM_BOOT_USE_TARGET: enables specifying precise disk parameter to use for
+    primary boot disk
+  * KVM_BOOT_NEXT_TARGET: secondary development disk to use, where you have your
+    git git trees and you compile your kernels
+  * KVM_BOOT_USE_NEXT_TARGET: enables specifying precise disk parameter to use
+    for qemu for the secondary development disk
+  * KVM_BOOT_MEM: amount of memory to use in MiB
+  * KVM_BOOT_CPUS: number of CPUs to use
+  * KVM_BOOT_KERNEL_APPEND: set of kernel parameters to use when booting using the
     direct file mechanism
   * KVM_BOOT: main KVM guest boot command to issue
 

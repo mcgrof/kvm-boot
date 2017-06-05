@@ -7,42 +7,42 @@
 
 function allow_user_defaults()
 {
-	if [ -z $VDE_SOCKET ]; then
-		VDE_SOCKET="/var/run/qemu-vde.ctl"
+	if [ -z $KVM_BOOT_VDE_SOCKET ]; then
+		KVM_BOOT_VDE_SOCKET="/var/run/qemu-vde.ctl"
 	fi
 
-	if [ -z $QEMU ]; then
-		QEMU=$(which qemu-system-x86_64)
+	if [ -z $KVM_BOOT_QEMU ]; then
+		KVM_BOOT_QEMU=$(which qemu-system-x86_64)
 	fi
 
-	if [ -z $TARGET ]; then
-		TARGET="/opt/qemu/opensuse-leap-42.2.img"
+	if [ -z $KVM_BOOT_TARGET ]; then
+		KVM_BOOT_TARGET="/opt/qemu/opensuse-leap-42.2.img"
 	fi
 
-	if [ -z $USE_TARGET ]; then
-		USE_TARGET="-hda $TARGET"
+	if [ -z $KVM_BOOT_USE_TARGET ]; then
+		KVM_BOOT_USE_TARGET="-hda $KVM_BOOT_TARGET"
 	fi
 
-	if [ -z $NEXT_TARGET ]; then
-		NEXT_TARGET="/opt/qemu/linux-next.qcow2"
+	if [ -z $KVM_BOOT_NEXT_TARGET ]; then
+		KVM_BOOT_NEXT_TARGET="/opt/qemu/linux-next.qcow2"
 	fi
 
-	if [ -z $USE_NEXT_TARGET ]; then
-		USE_NEXT_TARGET="-hdb $NEXT_TARGET"
+	if [ -z $KVM_BOOT_USE_NEXT_TARGET ]; then
+		KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 	fi
 
-	if [ -z $MEM ]; then
-		MEM="4096"
+	if [ -z $KVM_BOOT_MEM ]; then
+		KVM_BOOT_MEM="4096"
 	fi
 
-	if [ -z $CPUS ]; then
-		CPUS="4"
+	if [ -z $KVM_BOOT_CPUS ]; then
+		KVM_BOOT_CPUS="4"
 	fi
 
-	if [ -z $KERNEL_APPEND ]; then
+	if [ -z $KVM_BOOT_KERNEL_APPEND ]; then
 		# Only used if you are asking to boot into a specific
 		# development kernel
-		KERNEL_APPEND=(
+		KVM_BOOT_KERNEL_APPEND=(
 			debug
 			audit=0
 			load_ramdisk=2
@@ -74,16 +74,16 @@ function set_kvm_boot()
 {
 	if [ -z $KVM_BOOT ]; then
 		KVM_BOOT=(
-			$QEMU
+			$KVM_BOOT_QEMU
 			-cpu kvm64
 			-enable-kvm
 			$USE_KERNEL
-			-m $MEM
-			-smp $CPUS
-			-netdev vde,sock=$VDE_SOCKET,group=kvm,mode=0660,id=vde0
+			-m $KVM_BOOT_MEM
+			-smp $KVM_BOOT_CPUS
+			-netdev vde,sock=$KVM_BOOT_VDE_SOCKET,group=kvm,mode=0660,id=vde0
 			-device e1000,netdev=vde0,mac=52:54:00:12:34:84
-			$USE_TARGET
-			$USE_NEXT_TARGET
+			$KVM_BOOT_USE_TARGET
+			$KVM_BOOT_USE_NEXT_TARGET
 			-monitor pty
 			-serial stdio
 			-chardev pty,id=ttyS1
@@ -181,16 +181,16 @@ function parse_args()
 			;;
 		"-m")
 			shift
-			MEM=$1
+			KVM_BOOT_MEM=$1
 			parse_args $@
 			;;
 		"-c")
 			shift
-			CPUS=$1
+			KVM_BOOT_CPUS=$1
 			parse_args $@
 			;;
 		"-d")
-			QEMU="$HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64"
+			KVM_BOOT_QEMU="$HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64"
 			parse_args $@
 			;;
 		"-k")
@@ -205,17 +205,17 @@ function parse_args()
 			;;
 		"-t")
 			shift
-			TARGET=$1
-			USE_TARGET="-hda $TARGET"
+			KVM_BOOT_TARGET=$1
+			KVM_BOOT_USE_TARGET="-hda $KVM_BOOT_TARGET"
 			parse_args $@
 			;;
 		"-n")
 			shift
-			NEXT_TARGET=$1
-			if [[ "$NEXT_TARGET" == "none" ]]; then
-				USE_NEXT_TARGET=""
+			KVM_BOOT_NEXT_TARGET=$1
+			if [[ "$KVM_BOOT_NEXT_TARGET" == "none" ]]; then
+				KVM_BOOT_USE_NEXT_TARGET=""
 			else
-				USE_NEXT_TARGET="-hdb $NEXT_TARGET"
+				KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 			fi
 			parse_args $@
 			;;
@@ -242,5 +242,5 @@ if [[ "$USE_KERNEL" == "" ]]; then
 else
 	echo "Going to boot custom kernel"
 	echo "---------------------------"
-	"${KVM_BOOT[@]}" --append "${KERNEL_APPEND[*]}"
+	"${KVM_BOOT[@]}" --append "${KVM_BOOT_KERNEL_APPEND[*]}"
 fi
