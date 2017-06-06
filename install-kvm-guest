@@ -65,17 +65,20 @@ function parse_args()
 			exit 1
 			;;
 		"-d")
+			shift
 			KVM_BOOT_QEMU="$HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64"
 			parse_args $@
 			;;
 		"-i")
 			shift
 			KVM_BOOT_ISO=$1
+			shift
 			parse_args $@
 			;;
 		"-t")
 			shift
 			KVM_BOOT_TARGET=$1
+			shift
 			parse_args $@
 			;;
 		"-n")
@@ -86,6 +89,7 @@ function parse_args()
 			else
 				KVM_BOOT_USE_NEXT_TARGETT="-hdb $KVM_BOOT_NEXT_TARGET"
 			fi
+			shift
 			parse_args $@
 			;;
 		"-l")
