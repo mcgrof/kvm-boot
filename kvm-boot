@@ -129,32 +129,38 @@ function parse_args()
 		"-m")
 			shift
 			KVM_BOOT_MEM=$1
+			shift
 			parse_args $@
 			;;
 		"-c")
 			shift
 			KVM_BOOT_CPUS=$1
+			shift
 			parse_args $@
 			;;
 		"-d")
 			KVM_BOOT_QEMU="$HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64"
+			shift
 			parse_args $@
 			;;
 		"-k")
 			shift
 			parse_passed_kernel $1
-			parse_args $@
-			;;
-		"-l")
-			infer_latest_kernel
 			shift
 			parse_args $@
 			;;
+		"-l")
+			shift
+			infer_latest_kernel
+			parse_args $@
+			;;
 		"-b")
+			shift
 			;;
 		"-t")
 			shift
 			KVM_BOOT_TARGET=$1
+			shift
 			KVM_BOOT_USE_TARGET="-hda $KVM_BOOT_TARGET"
 			parse_args $@
 			;;
@@ -166,6 +172,7 @@ function parse_args()
 			else
 				KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 			fi
+			shift
 			parse_args $@
 			;;
 		*)
