@@ -16,7 +16,7 @@ function setup_headers()
 function set_kvm_boot_install()
 {
 	if [ -z $KVM_BOOT ]; then
-		kvm=(
+		KVM_BOOT=(
 			$KVM_BOOT_QEMU
 			-cpu kvm64
 			-enable-kvm
@@ -107,4 +107,4 @@ parse_args $@
 
 set_kvm_boot_install
 
-"${kvm[@]}"
+"${KVM_BOOT[@]}"
