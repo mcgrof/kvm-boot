@@ -143,10 +143,12 @@ function parse_args()
 		"-k")
 			shift
 			parse_passed_kernel $1
+			parse_args $@
 			;;
 		"-l")
 			infer_latest_kernel
 			shift
+			parse_args $@
 			;;
 		"-b")
 			;;
