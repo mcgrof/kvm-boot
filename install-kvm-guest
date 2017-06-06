@@ -93,7 +93,7 @@ function parse_args()
 			parse_args $@
 			;;
 		"-l")
-			ls -R $KVM_BOOT_KVM_BOOT_ISO_PATH
+			ls -R $KVM_BOOT_ISO_PATH
 			exit
 			;;
 		*)

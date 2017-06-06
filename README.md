@@ -126,7 +126,7 @@ As an alternative to using command like arguments with install-kvm-guest you
 can use environment variables. Some of the basic environment variables used for
 kvm-boot are also used with install-kvm-guest.
 
-  * KVM_BOOT_KVM_BOOT_ISO_PATH: path where your isos are located
+  * KVM_BOOT_ISO_PATH: path where your isos are located
   * KVM_BOOT_ISO: ISO to use for installation
 
 # Example minimum .bashrc settings

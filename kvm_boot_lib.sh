@@ -65,11 +65,11 @@ function allow_user_defaults()
 		)
 	fi
 
-	if [ -z $KVM_BOOT_KVM_BOOT_ISO_PATH ]; then
-		KVM_BOOT_KVM_BOOT_ISO_PATH="/opt/isos"
+	if [ -z $KVM_BOOT_ISO_PATH ]; then
+		KVM_BOOT_ISO_PATH="/opt/isos"
 	fi
 
 	if [ -z $KVM_BOOT_ISO ]; then
-		KVM_BOOT_ISO="$KVM_BOOT_KVM_BOOT_ISO_PATH/opensuse/openSUSE-Leap-42.2-DVD-x86_64-Build0215-Media.iso"
+		KVM_BOOT_ISO="$KVM_BOOT_ISO_PATH/opensuse/openSUSE-Leap-42.2-DVD-x86_64-Build0215-Media.iso"
 	fi
 }
