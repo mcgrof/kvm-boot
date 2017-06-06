@@ -27,20 +27,22 @@ When you decide you need to spawn guests just run this prior to spawning guests:
 
 	$ sudo ~/bin/setup-kvm-switch
 
-You may need to edit the file to replace WIRELESS_DEV variable for whatever
-your actual networking interface is.
-
-You should see:
+You may need to just set the environment variable KVM_BOOT_NETDEV with
+whatever interface you use for your connection to the Internet, and after
+this after spawning you should see:
 
 	Setting up switch on tap0
 	net.ipv4.ip_forward = 1
 
+If that does not work refer to the section: "Overriding defaults with
+environment variables for setup-kvm-switch" below for more environment
+variables you might need to fine tune.
+
 That should get your system setup for networking. It will allow your guests to
 run using DHCP with full networking. Your hosts will have a functional access
-to the network so long as your host does too. Although this does use dnsmasq we
-prefer to specify all requirements on the command line instead of asking you to
-have a custom configuraiton file or edit it. This strives for sensible defaults
-that might work for most).
+to the network so long as your host does too. This setup strives for sensible
+defaults that might work for most, allowing you to override with environment
+variables.
 
 # KVM use for users
 
