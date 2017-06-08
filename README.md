@@ -300,7 +300,7 @@ resulting configuration on par with what your distribution provided.
 
 	# Now merge the KVM guest requirements we recommend due to module
 	# issues.
-	scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+	./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
 
 	# Now compile away ! And then install
 	make -j 4
@@ -351,7 +351,7 @@ The resulting kernel configuration can now be used as a base. scp that file out
 onto your local system and then use scripts/kconfig/merge_config.sh to ensure
 you enable as built-in a few key config options:
 
-	scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+	./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
 
 Now build and install:
 
