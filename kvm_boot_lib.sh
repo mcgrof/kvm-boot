@@ -39,6 +39,18 @@ function allow_user_defaults()
 		KVM_BOOT_CPUS="4"
 	fi
 
+	if [ -z $KVM_BOOT_ENABLE_GRAPHICS ]; then
+		KVM_BOOT_ENABLE_GRAPHICS=false
+	fi
+
+	if [ -z $KVM_BOOT_USE_GRAPHICS ]; then
+		if [[ $KVM_BOOT_ENABLE_GRAPHICS == true ]]; then
+			KVM_BOOT_USE_GRAPHICS=""
+		else
+			KVM_BOOT_USE_GRAPHICS="-nographic"
+		fi
+	fi
+
 	if [ -z $KVM_BOOT_KERNEL_APPEND ]; then
 		# Only used if you are asking to boot into a specific
 		# development kernel

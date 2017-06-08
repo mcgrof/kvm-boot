@@ -93,6 +93,9 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
     for qemu for the secondary development disk
   * KVM_BOOT_MEM: amount of memory to use in MiB
   * KVM_BOOT_CPUS: number of CPUs to use
+  * KVM_BOOT_ENABLE_GRAPHICS: whether or not to enable graphics support, set
+    this to true during your initial setup, and remove that line once things
+    are ready.
   * KVM_BOOT_KERNEL_APPEND: set of kernel parameters to use when booting using the
     direct file mechanism
   * KVM_BOOT: main KVM guest boot command to issue
@@ -431,6 +434,11 @@ distribution so that the grub configuration files get updated.
 
   * Debian: update-grub
   * OpenSUSE: update-bootloader --refresh
+
+If you are having issues with tty setup ensure to enable graphics (SDL by
+default) with the variable KVM_BOOT_ENABLE_GRAPHICS=true on your .bashrc
+so you can have a way to log in. Remove that line once you know everything
+is properly set up and even networking is up.
 
 ## Booting development guest for the first time
 

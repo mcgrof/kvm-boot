@@ -37,7 +37,7 @@ function set_kvm_boot()
 			-device isa-serial,chardev=ttyS1
 			-chardev pty,id=ttyS2
 			-device isa-serial,chardev=ttyS2
-			-nographic
+			$KVM_BOOT_USE_GRAPHICS
 			$USE_INITRD
 			-boot order=d
 		)
