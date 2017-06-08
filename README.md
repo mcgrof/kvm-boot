@@ -55,7 +55,8 @@ bit should suffice.
 Usage
 -----
 
-There are two main uses, direct kernel file boot:
+There are two main uses, direct kernel file boot (be sure to read the section
+below "Direct file kernel configuration"):
 
 	$ kvm-boot -k arch/x86/boot/bzImage
 
@@ -156,6 +157,7 @@ Project goals
 
 # What we strive for
 
+  * We *want* mimimal kernel compile times
   * We *want* a super easy-to-read simple script
   * We *want* a distribution-agnostic solution
   * We *want* _full_ solid network connectivity for the guest kernels
@@ -194,8 +196,99 @@ however, we provide initramfs inference support. Initramfs inferences support
 relies on the *premise* that distributions have a proper /sbin/installkernel
 script.
 
+## Direct file kernel configuration
+
+Building kernels should be fast. Distribution kernels have tons of options
+enabled which slow down the kernel compilation process, and this also means
+it slows you down as a developer. You should only need to build kernels with
+enough bells and whistles to enable booting your host system and your target
+guest system. We will provide instructions on how to accomplish this and
+describe current known limitations to optimize this.
+
+We rely on the kernels' generic distro-agnostic install target:
+
+	make -j
+	sudo make modules_install install
+
+As documented in the subsection below this relies on /sbin/installkernel.
 One of the tricky aspects of using this method is you need a kernel with
-proper support for your KVM guest. You milleage may vary.
+proper an initramfs which will also work for your KVM guest. Experience shows
+relying on /sbin/installkernel does not do enough to ensure for this, even
+if you have all the guest kernel configuration options enabled as modules.
+
+The first inclination may be to try to enable all the required KVM guest
+kernel configurations as built-in (=y) but this also can suffer from some
+timing issues at boot. For this reason we provide a basic qemu x86_64 config
+file you can use with enough suggested kernel configuration options for the
+guest set to be built-in (=y) so you can at least try to get serial working
+and use the *much more reliable* networking guest access via ssh.
+
+For simplicity's sake we assume you'll be doing development based on linux-next,
+and that your development willl be based on the latest linux-next tag. For the
+sake of testing we will refer to our x86_64 guest as piggy, and so its kernel
+configuration as configs/piggy-x86-64-next-20170608.config -- the date reflects
+the linux-next tag from which the kernel configuration was based on. We'll
+provide updates to it when deemed necessary, typically when there is a kconfig
+rename which might distrupt this functionality.
+
+Using the guest kernel configuration won't be enough so you can boot your own
+system with the same kernel and initramfs -- should you want to try to do that.
+If you do want to install a kernel which will also work with your system (not
+the guest) you can do as follows to start a base kernel configuration. Do
+this from the linux-next git tree for kernel development.
+
+	cd ~/linux-next/
+	cp /boot/config-$(uname -r) .
+	cp ~/devel/kvm-boot/configs/piggy-x86-64-next-20170608.config .
+	# Reduce the kernel configuration to require only what your laptop needs
+	make localmodconfig
+	# Now merge the KVM guest requirements we recommend
+	scripts/kconfig/merge_config.sh -m piggy-x86-64-next-20170608.config
+	# Now compile away ! And then install
+	make -j 4
+	# this method of installing is documented further below
+	sudo make modules_install install
+
+You don't have to boot into this new kernel on your laptop/whatever system you
+are building from, but you *can* try if you want to -- this may work or not, it
+depends... (for me it does not from a jump from v4.10 distro kernel to v4.12).
+Additionally note that booting into linux-next may mean a failed boot either on
+your main system or your guest, given that linux-next is a moving target, so
+there may be bugs in linux-next which were not there in previous linux-next
+tags. We assume you are prepared for this, will want to engage upstream if
+there are issues or want to fix th issues.
+
+Now just try booting the damn guest !
+
+	kvm-boot
+
+Your tty may or may not work, notes on this below. What you really want is to
+get networking working, so somehow ensure you can get the guest IP address and
+just rely on that. Its proven to be much more reliable than serial on qemu.
+
+Also, you might think that enabling everything the guest needs as built-in
+would be good too, that actually also has issues, these issuare also documented
+below.
+
+## Issues with qemu tty
+
+Refer to the section 'Determing what tty properties to use' under tips and
+tricks. It turns out what this reports and the output from dmesg often differ.
+Next, sometimes the tty comes up and lets you use it to log in. Other times it
+does not. If you boot and it does not work try booting again. What the
+underlying issues is, is not clear.
+
+Additionally adding or removing multiple console= lines onto the qemu append
+line (see KVM_BOOT_KERNEL_APPEND on kvm_boot_lib.sh) can often also change
+behaviour, sometimes *never* allowing console to be used to log in.
+
+Some of these issues seem to be known upstream, for details refer to:
+
+https://lists.gnu.org/archive/html/qemu-devel/2013-06/msg01507.html
+
+For all the above reasons we recommend you just rely on networking to log in
+and get access to the guest. The console may only be realiable for output from
+the kernel.
 
 ## The Linux kernel /sbin/installkernel
 
@@ -212,29 +305,52 @@ Linux distribution:
 	$ make
 	$ sudo make modules_install install
 
+If doing this often creates too much clutter on /boot/ consider using the
+install-next-kernel.sh provided in this project.
+
 ## Relying on /sbin/installkernel
 
 We take advantage of how Linux distributions use /sbin/installkernel to ensure
 proper initramfs setup for you for guest setup in a distribution agnostic way.
 This does require you however to install a target kernel once.
 
-## Enable your target development as built-in
+## Enable your target development as built-in and issues
 
 Relying on /sbin/installkernel enables you to deploy an initramfs once, and
 provided you do not need to rely on that initramfs for new code deltas
-(re-compile modules) you are testing you can boot a second time by only
-compiling code locally without re-generating the initramfs.
+(re-compile modules) that you are testing you can boot a second time by only
+compiling code locally without re-generating the initramfs. One of the issues
+with relying on /sbin/installkernel however is it may not provide the modules
+you need to get your guest target functional. Additionally a direct boot method
+will typically get your guest to pivot root out from the initramfs and then rely
+on your image disk /lib/modules directory for further modules it needs outside
+of the boot modules that your distribution detects it needs. For instance,
+dracut would typically only stuff into the initramfs by default modules you
+need to boot your development system, not a guest target.
 
 Since you might often be doing development with what typically is enabled as
-modules you can can avoid the module catch-22 issue here by just enabling your
-development target and its dependencies to be compiled as built-in.
+modules, and due to the possible issues with the modules you need not being on
+the initramfs, in theory you'd think you can can avoid the module catch-22
+issue here by just enabling your development target and its dependencies to be
+compiled as built-in. This is all true, *in theory*. However this fails in
+practice.
+
+To demo the issue, first try the kernel configuration recommend under
+the above section "Direct file kernel configuration", then try a secondary
+kernel configuration as follows:
+
+	cd ~/linux-next/
+	# Now enable everything from both latpop / guest as built-in
+	make localyesconfig
+	sudo make modules_install install
+
+Try booting into that either on your laptop or guest. If you see something
+as follows, this is the issue described:
+
+	[***   ] A start job is running for dev-sda1.device (47s / no limit)
 
 If you *really* want to be relying on modules you can consider the other method
-of development work flow with kvm-boot using raw images. An alternative for
-the future is to consider eventual integration of optionally kicking off
-/sbin/installkernel as an option as a *regular user* during the Linux kernel
-'make' target, which would build the initramfs locally within the Linux kernel
-source tree.
+of development work flow with kvm-boot using raw images.
 
 ## kvm-boot initramfs setup
 
