@@ -38,6 +38,7 @@ Install
 
 Just run:
 
+	$ cd ~/devel/kvm-boot/
 	$ make install
 
 Setup
