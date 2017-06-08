@@ -475,6 +475,28 @@ Tips and tricks
 Below are list of collection of tips and tricks which may help you further
 in either diagnosign issues or help you with your development setup.
 
+# Booting with -k for the first time
+
+Booting qemu with a specific access works great but it obviously will not
+work well if the kernel options for the emulated qemu hardware are not enabled.
+Over time kconfig options change and when they do even if you copy over a
+functional kernel .config over from a functional old boot, things may not
+work on the fresh new kernel compile. To verify 'kvm-boot -k' works boot
+first with a distribution kernel that you know *does* work with qemu.
+
+In the future we'll provide a base .config you can use for qemu, but this
+probably really should just be a 'make qemuconfig' option upstream that merges
+the required options. The hard thing with this argument is that contrary to
+'make kvmconfig' and 'make xenconfig', qemu targets vary widely, so this makes
+this a questionable thing to do in a sensible way.
+
+What we *really* need is way to query a target machine for a kernel for a
+specific target, but a lot more work needs to be done before we get there.
+For some thoughts on this see this thread on adding a CONFIG symbol as a
+module attribute:
+
+https://lkml.kernel.org/r/20160818175505.GM3296@wotan.suse.de
+
 # Keeping your /boot small
 
 When using qcow2 images you may often find /boot can fill up quickly when
