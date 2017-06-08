@@ -521,6 +521,14 @@ This confirms that my ttyS1 was setup correctly as I expected it with 115200
 baud rate. If this is different from what you specified on your grub
 configuration this may be why you are having issues.
 
+# Ensuring your kernel booted with the right tty settings
+
+If you are not sure if your kernel booted with the right settings just
+query /proc/cmdline for instance:
+
+	linux-pleh:~ # cat /proc/cmdline
+	BOOT_IMAGE=/boot/vmlinuz-4.4.22-1-default root=UUID=4b38d06b-51f8-4c44-b339-f66ff4bd0884 console=ttyS1,115200 console=ttyS1 resume=/dev/sda1 splash=silent quiet showopts
+
 # Testing kernel suspend / resume with qemu for kernel development
 
 Often you may need to test suspend / resume on a target guest. The following
