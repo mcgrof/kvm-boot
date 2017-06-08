@@ -196,6 +196,23 @@ however, we provide initramfs inference support. Initramfs inferences support
 relies on the *premise* that distributions have a proper /sbin/installkernel
 script.
 
+## Direct file boot notes with modules
+
+The direct file boot method will use the specified kernel and initramfs. You
+hope that the required modules are present on the initramfs, typically there
+is no easy way to ensure this in distribution-agnostic way. After the kernel
+boots with its initramfs, it will look for modules in /lib/modules/$(uname -r)/
+and if the modules required to complete boot are not present there boot will
+fail.
+
+You could mount the image and copy over the /lib/modules/ contents over, or scp
+them over to the guest if you get the guest booted somehow, however this is all
+fragile.
+
+Because of these issues (and more) the below instructions recommend striving
+to get a kernel built with enough options to boot most guests, but also
+force enabling a few kernel configuration options as built-in.
+
 ## Direct file kernel configuration
 
 Building kernels should be fast. Distribution kernels have tons of options
@@ -226,37 +243,61 @@ and use the *much more reliable* networking guest access via ssh.
 For simplicity's sake we assume you'll be doing development based on linux-next,
 and that your development willl be based on the latest linux-next tag. For the
 sake of testing we will refer to our x86_64 guest as piggy, and so its kernel
-configuration as configs/piggy-x86-64-next-20170608.config -- the date reflects
-the linux-next tag from which the kernel configuration was based on. We'll
-provide updates to it when deemed necessary, typically when there is a kconfig
-rename which might distrupt this functionality.
+configuration as configs/piggy-x86-64-next.config -- this is a symlink, the
+actual file it points to have a date, which reflects the linux-next tag from
+which the kernel configuration was based on. We'll provide updates to it when
+deemed necessary, typically when there is a kconfig rename which might distrupt
+this functionality.
 
-Using the guest kernel configuration won't be enough so you can boot your own
-system with the same kernel and initramfs -- should you want to try to do that.
-If you do want to install a kernel which will also work with your system (not
-the guest) you can do as follows to start a base kernel configuration. Do
-this from the linux-next git tree for kernel development.
+Using the guest kernel configuration won't be enough so you can optionally boot
+your own system with the same kernel and initramfs -- should you want to try to
+do that.  If you do want to install a kernel which will also work with your
+system (not the guest) you can do as follows to start a base kernel
+configuration. Do this from the linux-next git tree for kernel development.
+
+First get your distribution's latest kernel. This may vary depending on your
+distribution. Some distributions have a kernel of the day (KOTD). For instance
+OpenSUSE has their KOTD here:
+
+https://en.opensuse.org/openSUSE:Kernel_of_the_day
+
+You will want to install and boot into a recent kernel on your laptop/server
+given linux-next has the latest development kernel code, we will rely on 'make
+localmodconfig' and this could break if modules are renamed upstream or if
+config values change over time. Using a recent kernel will try to keep our
+resulting configuration on par with what your distribution provided.
 
 	cd ~/linux-next/
-	cp /boot/config-$(uname -r) .
-	cp ~/devel/kvm-boot/configs/piggy-x86-64-next-20170608.config .
-	# Reduce the kernel configuration to require only what your laptop needs
+	cp /boot/config-$(uname -r) .config
+	cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
+
+	# Reduce the kernel configuration to require only what your local system
+	# needs. If you compile now this *should* work on your system.
 	make localmodconfig
-	# Now merge the KVM guest requirements we recommend
-	scripts/kconfig/merge_config.sh -m piggy-x86-64-next-20170608.config
+
+	# Now merge the KVM guest requirements we recommend due to module
+	# issues.
+	scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+
 	# Now compile away ! And then install
 	make -j 4
+
 	# this method of installing is documented further below
 	sudo make modules_install install
 
-You don't have to boot into this new kernel on your laptop/whatever system you
-are building from, but you *can* try if you want to -- this may work or not, it
-depends... (for me it does not from a jump from v4.10 distro kernel to v4.12).
+You don't have to boot into this new kernel on your system/laptop/whatever
+system you are building from, but you *can* try if you want to -- this may work
+or not, it depends...
+
 Additionally note that booting into linux-next may mean a failed boot either on
 your main system or your guest, given that linux-next is a moving target, so
 there may be bugs in linux-next which were not there in previous linux-next
 tags. We assume you are prepared for this, will want to engage upstream if
 there are issues or want to fix th issues.
+
+If you cannot get the above optimized kernel to boot on your guest start again
+and skip the 'make localmodconfig' as that cleary is removing some components
+not captured in piggy-x86-64-next.config which you do need.
 
 Now just try booting the damn guest !
 
@@ -269,6 +310,39 @@ just rely on that. Its proven to be much more reliable than serial on qemu.
 Also, you might think that enabling everything the guest needs as built-in
 would be good too, that actually also has issues, these issuare also documented
 below.
+
+## Using an optimized kernel only for your guest with direct boot
+
+You might think its worthy to just optimize kernel builds for your target guest
+locally only, not caring if the kernels you build and install will work with
+your own local system. If that's the case then first boot into the guest in
+a more reliable way, using qcow2 for instance. Then, do git clone of linux-next,
+and then do:
+
+	cd ~/linux-next/
+	cp /boot/config-$(uname -r) .config
+	cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
+	make localmodconfig
+
+The resulting kernel configuration can now be used as a base. scp that file out
+onto your local system and then use scripts/kconfig/merge_config.sh to ensure
+you enable as built-in a few key config options:
+
+	scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+
+Now build and install:
+
+	make -j 4
+	sudo make modules_install install
+
+This kernel build will for sure build much faster, however it will very likely
+not boot on your local system. Be sure to avoid booting into it on your system.
+If you'd like to distinguish these builds somehow you can use any file with
+the prefix "localversion-" on the ~/linux-next/ build directory. For instance
+I use: localversion-mcgrof and it has the following contents:
+
+	$ cat localversion-wireless
+	-mcgrof-piggy-dev
 
 ## Issues with qemu tty
 
