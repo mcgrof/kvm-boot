@@ -469,19 +469,19 @@ should then be able to ssh into it. There is a slew of issues which can occur
 when using console (see the WTF note on kvm-boot), for this reason the author
 has relied mostly on ssh for access to the system.
 
-## Keeping your /boot small
+Tips and tricks
+----------------
+
+Below are list of collection of tips and tricks which may help you further
+in either diagnosign issues or help you with your development setup.
+
+# Keeping your /boot small
 
 When using qcow2 images you may often find /boot can fill up quickly when
 doing a lot of development. If you are working with a linux-next development
 work flow you can consier copying over the file install-next-kernel.sh and
 using that when installing your kernels, it will make sure to always remove
 old linux-next instances, while keeping your distribution kernels.
-
-Tips and tricks
-----------------
-
-Below are list of collection of tips and tricks which may help you further
-in either diagnosign issues or help you with your development setup.
 
 # Determing what tty properties to use
 
