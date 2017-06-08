@@ -1,10 +1,10 @@
 kvm-boot
 ========
 
-kvm-boot is for folks who work on Linux kernel development and want to test
-kernel compiles fast with an extremely lightweight and very easy to read simple
-test script. It is currently x86_64 biased, however some initial tests have
-been done to make it work with other architectures.
+kvm-boot is for folks who work on Linux kernel development based on linux-next
+and want to test kernel compiles fast with an extremely lightweight and very
+easy to read simple test script. It is currently x86_64 biased, however some
+initial tests have been done to make it work with other architectures.
 
 Build
 -----
