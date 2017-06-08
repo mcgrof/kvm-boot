@@ -6,6 +6,28 @@ and want to test kernel compiles fast with an extremely lightweight and very
 easy to read simple test script. It is currently x86_64 biased, however some
 initial tests have been done to make it work with other architectures.
 
+Getting linux-next
+------------------
+
+Using linux-next should let you do development on any part of the Linux kernel
+and submit patches for that respective subsystem. It avoid you having to clone
+tons of separate branches.
+
+	git clone https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+
+When doing development you can do:
+
+	git checkout -b 20160608-mytopic next-20160608 --track origin/master
+
+Each day after this just do, for example on 20160609:
+
+	git fetch
+	git checkout -b 20160609-mytopic --track origin/master
+	git rebase --onto origin/master
+
+This will keep locally all of your old development branches and let you keep
+rolling with the latest development tress bunched together into one.
+
 Build
 -----
 
