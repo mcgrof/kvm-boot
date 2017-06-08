@@ -402,9 +402,15 @@ You will also need to setup the getty to spawn. This will vary depending
 on what init system you are using. If you are using old init you will
 need to add the entries on /etc/inittab:
 
-	T0:23:respawn:/sbin/getty -L ttyS0 115200 vt100
-	T1:23:respawn:/sbin/getty -L ttyS1 115200 vt100
-	T1:23:respawn:/sbin/getty -L ttyS2 115200 vt100
+	T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100
+	T1:2345:respawn:/sbin/getty -L ttyS1 115200 vt100
+	T2:2345:respawn:/sbin/getty -L ttyS2 115200 vt100
+
+Some systems (SLE11-SP4) uses agetty, its not much different:
+
+	S0:12345:respawn:/sbin/agetty -L 115200 ttyS0 vt102
+	S1:12345:respawn:/sbin/agetty -L 115200 ttyS1 vt102
+	S2:12345:respawn:/sbin/agetty -L 115200 ttyS2 vt102
 
 On systemd this is done as follows:
 
