@@ -17,12 +17,13 @@ tons of separate branches.
 
 When doing development you can do:
 
-	git checkout -b 20160608-mytopic next-20160608 --track origin/master
+	git checkout -b 20160608-mytopic next-20160608
 
 Each day after this just do, for example on 20160609:
 
 	git fetch
-	git checkout -b 20160609-mytopic --track origin/master
+	git checkout -b 20160609-mytopic
+	git branch --set-upstream-to=origin/master 20160609-mytopic
 	git rebase --onto origin/master
 
 This will keep locally all of your old development branches and let you keep
