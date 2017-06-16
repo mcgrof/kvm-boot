@@ -635,7 +635,11 @@ On systemd this is done as follows:
 	systemctl enable console-getty.service getty@ttyS1.service
 	systemctl enable console-getty.service getty@ttyS2.service
 
-Edit the guest /etc/default/grub and ensure you have these entries:
+It is *imperative* that yo do not screw up and re-use one label or device name
+above, for instance if you use ttyS0 twice things will not work. Likewise for
+the first tag on inittab, if you use S0 twice it will not work.
+
+Finally, edit the guest /etc/default/grub and ensure you have these entries:
 
 	GRUB_CMDLINE_LINUX="console=ttyS1,115200 console=ttyS1"
 	GRUB_TERMINAL=serial
