@@ -647,8 +647,16 @@ Finally, edit the guest /etc/default/grub and ensure you have these entries:
 The last line mentioned above enables you to select a kernel through the
 grub prompt through serial.
 
-After this you will need to run the boot loader refresh script for your
-distribution so that the grub configuration files get updated.
+If you are GRUB 0.9x (SLE11-SP4) -- then you will instead to edit the file
+/boot/grub/menu.lst and add the above entry for console to the kernel line.
+For instance I have on SLE11-SP4:
+
+	kernel /boot/vmlinuz-3.0.101-63-default root=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part2 resume=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part1 console=ttyS1,115200 console=ttyS1 crashkernel=256M-:128M showopts vga=0x314
+
+I have removed the splash=silent entry.
+
+After grub setup this you will need to run the boot loader refresh script for
+your distribution so that the grub configuration files get updated.
 
   * Debian: update-grub
   * OpenSUSE: update-bootloader --refresh
