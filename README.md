@@ -653,7 +653,11 @@ For instance I have on SLE11-SP4:
 
 	kernel /boot/vmlinuz-3.0.101-63-default root=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part2 resume=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part1 console=ttyS1,115200 console=ttyS1 crashkernel=256M-:128M showopts vga=0x314
 
-I have removed the splash=silent entry.
+I have removed the splash=silent entry. Its unclear to me yet how to set up the
+GRUB_TERMINAL equivalent for the initial boot prompt to let you select a kernel
+at bootup, as with grub 0.9x. Because of this if you need to select a specific
+kernel or modify boot params you can force this on the menu.lst file or use the
+KVM_BOOT_ENABLE_GRAPHICS=true so you can use an SDL interface.
 
 After grub setup this you will need to run the boot loader refresh script for
 your distribution so that the grub configuration files get updated.
