@@ -653,11 +653,33 @@ For instance I have on SLE11-SP4:
 
 	kernel /boot/vmlinuz-3.0.101-63-default root=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part2 resume=/dev/disk/by-id/ata-QEMU_HARDDISK_QM00001-part1 console=ttyS1,115200 console=ttyS1 crashkernel=256M-:128M showopts vga=0x314
 
-I have removed the splash=silent entry. Its unclear to me yet how to set up the
-GRUB_TERMINAL equivalent for the initial boot prompt to let you select a kernel
-at bootup, as with grub 0.9x. Because of this if you need to select a specific
-kernel or modify boot params you can force this on the menu.lst file or use the
-KVM_BOOT_ENABLE_GRAPHICS=true so you can use an SDL interface.
+I have removed the splash=silent entry. To set up the equivalent of
+GRUB_TERMINAL on grub 0.97 you can use the following but upon testing this does
+seem to just generate a prompt asking for any input, displaying the boot prompt
+does not seems work. Add this to your /boot/grub/menu.lst  after the timeout
+line, for instance my menu.lst file starts with:
+
+	default 0
+	timeout 8
+	serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
+	terminal --timeout=4 serial console
+
+This will use ttyS0 (where you launch kvm-boot from). Use unit=1 to use ttyS1,
+for instance. The "terminal" line specifies where grub 0.97 we'll throw the
+boot prompt by default in the timeout specified. Each second it will display
+"Press any key to continue." on both serial and console, if it receives input
+from any, it will then display the boot prompt there. The first entry is where
+the default grub 0.97 will use to display the boot prompt. Above we are
+being explicit we want the boot prompt to go to serial. In theory this should
+work as [serial is documented on TLDP for grub 0.97], however in practice this
+does not seem to work. As such if you really need to pick kernels when booting
+with grub 0.97 and kvm-boot you should just consider enabling
+
+	KVM_BOOT_ENABLE_GRAPHICS=true
+
+This will ensure you get a boot prompt through the qemu SDL interface.
+
+[serial is documented on TLDP for grub 0.97]: http://www.tldp.org/HOWTO/Remote-Serial-Console-HOWTO/configure-boot-loader-grub.html
 
 After grub setup this you will need to run the boot loader refresh script for
 your distribution so that the grub configuration files get updated.
