@@ -68,6 +68,20 @@ to the network so long as your host does too. This setup strives for sensible
 defaults that might work for most, allowing you to override with environment
 variables.
 
+## Advanced networking - sharing VPN network
+
+Suppose your laptop has a connection to the internet but also uses a tun
+interface for VPN, so your VPN interface is tun0. If you wanted to share that
+you can also do so with the guests, just re-run setup-kvm-switch but now with
+the KVM_BOOT_NETDEV=tun0 assuming your VPN interface is tun0.
+
+	# export KVM_BOOT_NETDEV=tun0
+	./setup-kvm-switch
+	Setting up switch on tap0
+	net.ipv4.ip_forward = 1
+
+Your guests should magically now also be able to share the VPN network with you.
+
 # KVM use for users
 
 You will want to enable use of kvm for users. Typically this can be done
