@@ -81,6 +81,9 @@ the KVM_BOOT_NETDEV=tun0 assuming your VPN interface is tun0.
 	net.ipv4.ip_forward = 1
 
 Your guests should magically now also be able to share the VPN network with you.
+If you need to switch back witha access to the internet, you will have to re-run
+with the interface you use to connect to the internet. Perhaps later we can
+enable both at the same time, but for now this hack works.
 
 # KVM use for users
 
