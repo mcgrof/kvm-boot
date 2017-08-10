@@ -49,7 +49,7 @@ Setup
 
 When you decide you need to spawn guests just run this prior to spawning guests:
 
-	$ sudo ~/bin/setup-kvm-switch
+	$ sudo -E ~/bin/setup-kvm-switch
 
 You may need to just set the environment variable KVM_BOOT_NETDEV with
 whatever interface you use for your connection to the Internet, and after
