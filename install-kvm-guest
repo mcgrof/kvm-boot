@@ -85,9 +85,9 @@ function parse_args()
 			shift
 			KVM_BOOT_NEXT_TARGET=$1
 			if [[ "$KVM_BOOT_NEXT_TARGET" == "none" ]]; then
-				KVM_BOOT_USE_NEXT_TARGETT=""
+				KVM_BOOT_USE_NEXT_TARGET=""
 			else
-				KVM_BOOT_USE_NEXT_TARGETT="-hdb $KVM_BOOT_NEXT_TARGET"
+				KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 			fi
 			shift
 			parse_args $@
