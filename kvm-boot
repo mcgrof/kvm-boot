@@ -31,6 +31,7 @@ function set_kvm_boot()
 			-device e1000,netdev=vde0,mac=52:54:00:12:34:84
 			$KVM_BOOT_USE_TARGET
 			$KVM_BOOT_USE_NEXT_TARGET
+			$KVM_BOOT_EXTRA_DEV_0001
 			-monitor pty
 			-serial stdio
 			-chardev pty,id=ttyS1
@@ -192,12 +193,15 @@ fi
 set_kvm_boot
 
 if [[ "$USE_KERNEL" == "" ]]; then
-	echo $USE_KERNEL
+	echo
 	echo "Going to boot directly onto image disk"
 	echo "---------------------------------------"
+	echo "Calling:"
+	echo "${KVM_BOOT[@]}"
 	"${KVM_BOOT[@]}"
 else
 	echo "Going to boot custom kernel"
 	echo "---------------------------"
+	echo "${KVM_BOOT[@]}" --append "${KVM_BOOT_KERNEL_APPEND[*]}"
 	"${KVM_BOOT[@]}" --append "${KVM_BOOT_KERNEL_APPEND[*]}"
 fi

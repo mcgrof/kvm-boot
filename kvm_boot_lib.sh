@@ -31,6 +31,10 @@ function allow_user_defaults()
 		KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 	fi
 
+	if [[ -z $KVM_BOOT_EXTRA_DEV_0001 ]]; then
+		KVM_BOOT_EXTRA_DEV_0001=""
+	fi
+
 	if [ -z $KVM_BOOT_MEM ]; then
 		KVM_BOOT_MEM="4096"
 	fi
