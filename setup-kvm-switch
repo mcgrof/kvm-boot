@@ -57,6 +57,8 @@ function allow_user_defaults()
 }
 
 do_ifconfig() {
+    echo Calling:
+    echo ifconfig "$@"
     ifconfig "$@"
 }
 
@@ -95,6 +97,8 @@ flush_tables()
 add_filter_rules()
 {
 	flush_tables
+	echo Calling:
+	echo iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 	iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 }
 
@@ -103,6 +107,7 @@ start_dnsmasq() {
 	--strict-order \
 	--log-queries \
 	--except-interface=lo \
+	--no-dhcp-interface=$KVM_BOOT_NETDEV \
 	--interface=$1 \
 	--listen-address=$KVM_BOOT_GATEWAY \
 	--bind-interfaces \
