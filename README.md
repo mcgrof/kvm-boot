@@ -141,6 +141,9 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
   * KVM_BOOT_KERNEL_APPEND: set of kernel parameters to use when booting using the
     direct file mechanism
   * KVM_BOOT: main KVM guest boot command to issue
+  * KVM_BOOT_MAC: desired guest mac address, otherwise we compute this
+    based on the basename of the target file. For details on that
+    implementation refer to str_to_mac().
 
 # Overriding defaults with environment variables for setup-kvm-switch
 

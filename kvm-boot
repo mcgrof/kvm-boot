@@ -17,8 +17,60 @@ KERNEL=""
 USE_KERNEL=""
 USE_INITRD=""
 
+function get_random()
+{
+	head -10 /dev/random | strings | sed ':a;N;$!ba;s/\n/ /g' | awk '{print $1$2$3$4}'
+}
+
+function str_to_hex()
+{
+	echo $(hexdump -e '"%X"' <<< "$1")
+}
+
+function str_to_mac()
+{
+	if [ "${#1}" -le 6 ]; then
+		INPUT=$(get_random)
+	else
+		INPUT=$1
+	fi
+	FILE=$(basename $INPUT)
+	MAC=""
+	COUNT=0
+	hex=$(str_to_hex $FILE)
+	hex_long=$(echo $hex | sed -e 's/\(.\)/\1 /g')
+
+
+	for i in $hex_long;  do
+		if [ $COUNT -ge 12 ]; then
+			break
+		fi
+		if [ $COUNT -eq 0 ]; then
+			MAC="$i"
+		else
+			if [[ "$(($COUNT%2))" -eq 1 ]]; then
+				if [ $COUNT -eq 11 ]; then
+					MAC="${MAC}${i}"
+				else
+					MAC="${MAC}${i}:"
+				fi
+			else
+				MAC="${MAC}${i}"
+			fi
+		fi
+		let COUNT=$COUNT+1
+	done
+	echo $MAC
+	echo count: $COUNT
+}
+
 function set_kvm_boot()
 {
+	if [ -z $KVM_BOOT_MAC ]; then
+		MAC=$(str_to_mac $KVM_BOOT_TARGET)
+	else
+		MAC=$KVM_BOOT_MAC
+	fi
 	if [ -z $KVM_BOOT ]; then
 		KVM_BOOT=(
 			$KVM_BOOT_QEMU
@@ -28,7 +80,7 @@ function set_kvm_boot()
 			-m $KVM_BOOT_MEM
 			-smp $KVM_BOOT_CPUS
 			-netdev vde,sock=$KVM_BOOT_VDE_SOCKET,group=kvm,mode=0660,id=vde0
-			-device e1000,netdev=vde0,mac=52:54:00:12:34:84
+			-device e1000,netdev=vde0,mac=$MAC
 			$KVM_BOOT_USE_TARGET
 			$KVM_BOOT_USE_NEXT_TARGET
 			$KVM_BOOT_EXTRA_DEV_0001
