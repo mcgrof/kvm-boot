@@ -35,21 +35,21 @@ function str_to_mac()
 		INPUT=$1
 	fi
 	FILE=$(basename $INPUT)
-	MAC=""
+	MAC="52:54:00:"
 	COUNT=0
 	hex=$(str_to_hex $FILE)
 	hex_long=$(echo $hex | sed -e 's/\(.\)/\1 /g')
 
 
 	for i in $hex_long;  do
-		if [ $COUNT -ge 12 ]; then
+		if [ $COUNT -ge 6 ]; then
 			break
 		fi
 		if [ $COUNT -eq 0 ]; then
-			MAC="$i"
+			MAC="${MAC}$i"
 		else
 			if [[ "$(($COUNT%2))" -eq 1 ]]; then
-				if [ $COUNT -eq 11 ]; then
+				if [ $COUNT -eq 5 ]; then
 					MAC="${MAC}${i}"
 				else
 					MAC="${MAC}${i}:"
