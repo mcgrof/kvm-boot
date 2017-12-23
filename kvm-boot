@@ -61,7 +61,6 @@ function str_to_mac()
 		let COUNT=$COUNT+1
 	done
 	echo $MAC
-	echo count: $COUNT
 }
 
 function set_kvm_boot()
