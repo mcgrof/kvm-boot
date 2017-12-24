@@ -24,16 +24,12 @@ function get_random()
 
 function str_to_hex()
 {
-	echo $(hexdump -e '"%X"' <<< "$1")
+	echo $(hexdump -e '"%X"' <<< "$1" | sha256sum | awk '{print $1}')
 }
 
 function str_to_mac()
 {
-	if [ "${#1}" -le 6 ]; then
-		INPUT=$(get_random)
-	else
-		INPUT=$1
-	fi
+	INPUT=$1
 	FILE=$(basename $INPUT)
 	MAC="52:54:00:"
 	COUNT=0
