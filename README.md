@@ -734,6 +734,22 @@ control interface using screen as well:
 	$ screen /dev/pts/11
 	$ screen /dev/pts/12
 
+## Determing your guest IP
+
+Depending on the version of dnsmasq you use, the path to the lease file may
+change. We use the default which for me is:
+
+	cat /var/lib/misc/dnsmasq.leases
+
+You can cat this file or:
+
+	tail -f /var/lib/misc/dnsmasq.leases
+
+As the guest boots to see what IP it ends up with. Alternatively you can
+use nmap:
+
+	nmap -sP 192.168.53.0/24
+
 ## Sshing into your guest image
 
 Make sure to write down the IP address of the guest before using kvm-boot, you
