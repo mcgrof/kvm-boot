@@ -5,6 +5,17 @@
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
+function setup_single_guest_defaults()
+{
+	if [ -z $KVM_BOOT_NEXT_TARGET ]; then
+		KVM_BOOT_NEXT_TARGET="/opt/qemu/linux-next.qcow2"
+	fi
+
+	if [ -z $KVM_BOOT_USE_NEXT_TARGET ]; then
+		KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
+	fi
+}
+
 function allow_user_defaults()
 {
 	if [ -z $KVM_BOOT_VDE_SOCKET ]; then
@@ -23,12 +34,8 @@ function allow_user_defaults()
 		KVM_BOOT_USE_TARGET="-hda $KVM_BOOT_TARGET"
 	fi
 
-	if [ -z $KVM_BOOT_NEXT_TARGET ]; then
-		KVM_BOOT_NEXT_TARGET="/opt/qemu/linux-next.qcow2"
-	fi
-
-	if [ -z $KVM_BOOT_USE_NEXT_TARGET ]; then
-		KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
+	if [ ! -z $KVM_BOOT_SINGLE_GUEST ]; then
+		setup_single_guest_defaults
 	fi
 
 	if [[ -z $KVM_BOOT_EXTRA_DEV_0001 ]]; then

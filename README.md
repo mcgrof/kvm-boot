@@ -103,12 +103,17 @@ below "Direct file kernel configuration"):
 
 Raw image boot:
 
-	$ kvm-boot -b
+	$ kvm-boot -b -t /opt/qemu/some.img
 
 Raw image boot using a specific main image and custom secondary development
 disk:
 
 	$ kvm-boot -t /opt/qemu/some.img -n /opt/qemu/linux-next.qcow2
+
+Previously kvm-boot used to set defaults for the target and secondary
+development target, however this is not safe if you are using multiple
+guests, as such this is no longer done. If you do want to set the defaults
+alwas set the environment variable KVM_BOOT_SINGLE_GUEST=true.
 
 Additionally if you are working on qemu development you can always use:
 
@@ -124,6 +129,10 @@ may pass to qemu.
 The list of variables you can override are viewable on the function
 allow_user_defaults() on kvm-boot, we list them and document them here:
 
+  * KVM_BOOT_SINGLE_GUEST: set if you want to indicate to kvm-boot that you
+    will only use a single guests. This will set some default variables
+    which would otherwise be unsafe if you are going to be using multiple
+    guests.
   * KVM_BOOT_VDE_SOCKET: qemu socket to when vde2 is used for networking
   * KVM_BOOT_QEMU: qemu binary to use
   * KVM_BOOT_TARGET: primary target qcow2 image to use for boot disk
