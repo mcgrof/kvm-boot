@@ -85,6 +85,22 @@ If you need to switch back witha access to the internet, you will have to re-run
 with the interface you use to connect to the internet. Perhaps later we can
 enable both at the same time, but for now this hack works.
 
+### Switching between localnet and vpn
+
+Often times you may have a guest which needs VPN access during most operations
+but every now and then it needs access to the regular internet. If using VPN
+as described above your guest may end up only with access the VPN and not to
+the regular internet, to fix this we should be able to modify the iptables rules
+however this requires more work. For now you can switch between both by having
+say two scripts, and you can run them depending on what access the guest may
+need at times:
+
+	$ cat localnet.sh
+	export KVM_BOOT_NETDEV='enp0s25'; sudo -E ./setup-kvm-switch
+
+	$ cat vpn.sh
+	export KVM_BOOT_NETDEV='tun0' ; sudo -E ./setup-kvm-switch
+
 # KVM use for users
 
 You will want to enable use of kvm for users. Typically this can be done
@@ -876,6 +892,9 @@ suspend to ram or disk as follows:
 TODO
 ----
 
+  * Add iptables setup option to setup-kvm-switch which will also enable to
+    use both VPN and local internet access, without having to switch between
+    two devices as described in the section 'Switching between localnet and vpn'
   * Document how to get direct raw access to disk for filesystem benchmarking and
     testing.
   * Make sure the above intructions work for most distributions and adjust as
