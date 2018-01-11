@@ -98,6 +98,10 @@ add_filter_rules()
 {
 	flush_tables
 	echo Calling:
+	if [ ! -z $KVM_BOOT_NETDEV_VPN ]; then
+		echo iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV_VPN -j MASQUERADE
+		iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV_VPN -j MASQUERADE
+	fi
 	echo iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 	iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 }

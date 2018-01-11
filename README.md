@@ -72,34 +72,20 @@ variables.
 
 Suppose your laptop has a connection to the internet but also uses a tun
 interface for VPN, so your VPN interface is tun0. If you wanted to share that
-you can also do so with the guests, just re-run setup-kvm-switch but now with
-the KVM_BOOT_NETDEV=tun0 assuming your VPN interface is tun0.
+you can also do so with the guests, set the environment variable
+KVM_BOOT_NETDEV_VPN with the VPN interface. You can therefore share both
+your internet and VPN setup the guest. For example, say you have a wifi
+setup and are also connected to a VPN you can share both as follows:
 
-	# export KVM_BOOT_NETDEV=tun0
+	# export KVM_BOOT_NETDEV=wlp2s0
+	# export KVM_BOOT_NETDEV_VPN=tun0
 	./setup-kvm-switch
 	Setting up switch on tap0
+	Setting up switch on wlp2s0
 	net.ipv4.ip_forward = 1
 
-Your guests should magically now also be able to share the VPN network with you.
-If you need to switch back witha access to the internet, you will have to re-run
-with the interface you use to connect to the internet. Perhaps later we can
-enable both at the same time, but for now this hack works.
-
-### Switching between localnet and vpn
-
-Often times you may have a guest which needs VPN access during most operations
-but every now and then it needs access to the regular internet. If using VPN
-as described above your guest may end up only with access the VPN and not to
-the regular internet, to fix this we should be able to modify the iptables rules
-however this requires more work. For now you can switch between both by having
-say two scripts, and you can run them depending on what access the guest may
-need at times:
-
-	$ cat localnet.sh
-	export KVM_BOOT_NETDEV='enp0s25'; sudo -E ./setup-kvm-switch
-
-	$ cat vpn.sh
-	export KVM_BOOT_NETDEV='tun0' ; sudo -E ./setup-kvm-switch
+Your guests should magically now also be able to share the VPN and your local
+network with your guest.
 
 # KVM use for users
 
