@@ -660,11 +660,25 @@ Some systems (SLE11-SP4) uses agetty, its not much different:
 	S1:12345:respawn:/sbin/agetty -L 115200 ttyS1 vt102
 	S2:12345:respawn:/sbin/agetty -L 115200 ttyS2 vt102
 
-On systemd this is done as follows:
+On systemd this is done as follows (>= SLE12-SP2):
 
 	systemctl enable console-getty.service getty@ttyS0.service
 	systemctl enable console-getty.service getty@ttyS1.service
 	systemctl enable console-getty.service getty@ttyS2.service
+
+	systemctl start getty@ttyS0.service
+	systemctl start getty@ttyS1.service
+	systemctl start getty@ttyS2.service
+
+On SLE12-SP1 you can do:
+
+	systemctl enable serial-getty@ttyS0.service getty@ttyS0.service
+	systemctl enable serial-getty@ttyS1.service getty@ttyS1.service
+	systemctl enable serial-getty@ttyS2.service getty@ttyS2.service
+
+	systemctl start serial-getty@ttyS0.service
+	systemctl start serial-getty@ttyS1.service
+	systemctl start serial-getty@ttyS2.service
 
 It is *imperative* that yo do not screw up and re-use one label or device name
 above, for instance if you use ttyS0 twice things will not work. Likewise for
