@@ -66,8 +66,18 @@ function allow_user_defaults_network()
 
 do_ifconfig() {
     echo Calling:
-    echo ifconfig "$@"
-    ifconfig "$@"
+    IFCONFIG_DEV=$1
+    IFCONFIG_IP=$2
+    IFCONFIG_NETMASK=$4
+
+    which ip 2>&1 > /dev/null
+    if [ $? -eq 0 ]; then
+	    ip addr add $IFCONFIG_IP/$IFCONFIG_NETMASK dev $IFCONFIG_DEV
+	    ip link set dev $IFCONFIG_DEV up
+    else
+	echo ifconfig "$@"
+	ifconfig "$@"
+    fi
 }
 
 do_iptables_restore() {
