@@ -135,7 +135,10 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
     will only use a single guests. This will set some default variables
     which would otherwise be unsafe if you are going to be using multiple
     guests.
-  * KVM_BOOT_VDE_SOCKET: qemu socket to when vde2 is used for networking
+  * KVM_BOOT_VDE_SOCKET: qemu socket to when vde2 is used for networking,
+    we purposely override this to /var/run/qemu-vde.ctl, the vde_switch default
+    would otherwise use /tmp/vde.ctl. We want to avoid clashes with other
+    user or system VDE setups.
   * KVM_BOOT_QEMU: qemu binary to use
   * KVM_BOOT_TARGET: primary target qcow2 image to use for boot disk
   * KVM_BOOT_USE_TARGET: enables specifying precise disk parameter to use for

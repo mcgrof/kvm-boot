@@ -1,11 +1,19 @@
-#!/bin/sh
-# Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
+#!/bin/bash
+# Copyright (C) 2017-2018 Luis R. Rodriguez <mcgrof@kernel.org>
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
-function allow_user_defaults()
+function setup_headers()
+{
+	if [ -z $KVM_BOOT_LIB_DIR ]; then
+		KVM_BOOT_LIB_DIR=$(dirname $0)
+	fi
+	source $KVM_BOOT_LIB_DIR/kvm_boot_lib.sh
+}
+
+function allow_user_defaults_network()
 {
 	if [ -z $KVM_BOOT_NETDEV ]; then
 		KVM_BOOT_NETDEV=wlp3s0
@@ -146,7 +154,7 @@ start_vdeswitch() {
 	-tap $KVM_BOOT_TAP_DEV \
 	-mod 660 \
 	-group kvm \
-	-s /var/run/qemu-vde.ctl \
+	-s $KVM_BOOT_VDE_SOCKET \
 	--pidfile /var/run/qemu-vde.pid \
 	-daemon
 }
@@ -156,7 +164,9 @@ setup_nat() {
 	add_filter_rules "$1"
 }
 
+setup_headers
 allow_user_defaults
+allow_user_defaults_network
 
 echo Setting up switch on $KVM_BOOT_TAP_DEV
 
