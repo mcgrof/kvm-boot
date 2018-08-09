@@ -5,7 +5,7 @@
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
-function setup_headers()
+setup_headers()
 {
 	if [ -z $KVM_BOOT_LIB_DIR ]; then
 		KVM_BOOT_LIB_DIR=$(dirname $0)
@@ -17,17 +17,17 @@ KERNEL=""
 USE_KERNEL=""
 USE_INITRD=""
 
-function get_random()
+get_random()
 {
 	head -10 /dev/random | strings | sed ':a;N;$!ba;s/\n/ /g' | awk '{print $1$2$3$4}'
 }
 
-function str_to_hex()
+str_to_hex()
 {
 	echo $(hexdump -e '"%X"' <<< "$1" | sha256sum | awk '{print $1}')
 }
 
-function str_to_mac()
+str_to_mac()
 {
 	INPUT=$1
 	FILE=$(basename $INPUT)
@@ -59,7 +59,7 @@ function str_to_mac()
 	echo $MAC
 }
 
-function set_kvm_boot()
+set_kvm_boot()
 {
 	if [ -z $KVM_BOOT_MAC ]; then
 		MAC=$(str_to_mac $KVM_BOOT_TARGET)
@@ -92,7 +92,7 @@ function set_kvm_boot()
 	fi
 }
 
-function usage()
+usage()
 {
 	echo -e "Usage $0 [ -d | -b | -l | -k /boot/some-kernel-vmlinuz ]"
 	echo -e ""
@@ -111,7 +111,7 @@ function usage()
 	echo -e ""
 }
 
-function setup_qemu_kernel()
+setup_qemu_kernel()
 {
 
 	USE_KERNEL="-kernel $KERNEL"
@@ -119,14 +119,14 @@ function setup_qemu_kernel()
 	explain_using
 }
 
-function explain_using()
+explain_using()
 {
 	echo -e "Using:"
 	echo -e "Kernel:\t\t$KERNEL"
 	echo -e "Initramfs:\t$INITRAMFS"
 }
 
-function infer_latest_kernel()
+infer_latest_kernel()
 {
 	LATEST_KERNEL=$(ls -atr /boot/vmlinuz*| tail -1)
 	LATEST_INITRAMFS=$(ls -atr /boot/initrd*| tail -1)
@@ -142,7 +142,7 @@ function infer_latest_kernel()
 	setup_qemu_kernel
 }
 
-function parse_passed_kernel()
+parse_passed_kernel()
 {
 	PASSED_KERNEL=$1
 	if [[ -f $PASSED_KERNEL ]]; then
@@ -163,7 +163,7 @@ function parse_passed_kernel()
 	setup_qemu_kernel
 }
 
-function parse_args()
+parse_args()
 {
 	case $1 in
 		"--help")
