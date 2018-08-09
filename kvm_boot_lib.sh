@@ -23,7 +23,7 @@ allow_user_defaults_network()
 	fi
 
 	if [ -z $KVM_BOOT_TAP_DEV ]; then
-		KVM_BOOT_TAP_DEV=tap0
+		KVM_BOOT_TAP_DEV=kvmboot0
 	fi
 
 	# Network information, these are sane values, you can keep them
