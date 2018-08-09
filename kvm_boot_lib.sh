@@ -1,11 +1,11 @@
 #!/bin/bash
-# Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
+# Copyright (C) 2017-2018 Luis R. Rodriguez <mcgrof@kernel.org>
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
-function setup_single_guest_defaults()
+setup_single_guest_defaults()
 {
 	if [ -z $KVM_BOOT_NEXT_TARGET ]; then
 		KVM_BOOT_NEXT_TARGET="/opt/qemu/linux-next.qcow2"
@@ -16,7 +16,7 @@ function setup_single_guest_defaults()
 	fi
 }
 
-function allow_user_defaults()
+allow_user_defaults()
 {
 	if [ -z $KVM_BOOT_VDE_SOCKET ]; then
 		KVM_BOOT_VDE_SOCKET="/var/run/qemu-vde.ctl"

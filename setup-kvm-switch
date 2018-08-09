@@ -16,7 +16,7 @@ setup_finish()
 
 trap "setup_finish" EXIT
 
-function setup_headers()
+setup_headers()
 {
 	if [ -z $KVM_BOOT_LIB_DIR ]; then
 		KVM_BOOT_LIB_DIR=$(dirname $0)
@@ -24,7 +24,7 @@ function setup_headers()
 	source $KVM_BOOT_LIB_DIR/kvm_boot_lib.sh
 }
 
-function allow_user_defaults_network()
+allow_user_defaults_network()
 {
 	if [ -z $KVM_BOOT_NETDEV ]; then
 		KVM_BOOT_NETDEV=wlp3s0
@@ -97,34 +97,37 @@ function allow_user_defaults_network()
 	fi
 }
 
-do_ifconfig() {
-    IFCONFIG_DEV=$1
-    IFCONFIG_IP=$2
-    IFCONFIG_NETMASK=$4
+do_ifconfig()
+{
+	IFCONFIG_DEV=$1
+	IFCONFIG_IP=$2
+	IFCONFIG_NETMASK=$4
  
-    which ip 2>&1 > /dev/null
-    if [ $? -eq 0 ]; then
-	     if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
-		echo Calling
-		echo ip addr add $IFCONFIG_IP/$IFCONFIG_NETMASK dev $IFCONFIG_DEV
-		echo ip link set dev $IFCONFIG_DEV up
-	    fi
-	    ip addr add $IFCONFIG_IP/$IFCONFIG_NETMASK dev $IFCONFIG_DEV
-	    ip link set dev $IFCONFIG_DEV up
-    else
-	if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
-    		echo Calling:
-		echo ifconfig "$@"
+	which ip 2>&1 > /dev/null
+	if [ $? -eq 0 ]; then
+		if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
+			echo Calling
+			echo ip addr add $IFCONFIG_IP/$IFCONFIG_NETMASK dev $IFCONFIG_DEV
+			echo ip link set dev $IFCONFIG_DEV up
+		fi
+		ip addr add $IFCONFIG_IP/$IFCONFIG_NETMASK dev $IFCONFIG_DEV
+		ip link set dev $IFCONFIG_DEV up
+	else
+		if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
+			echo Calling:
+			echo ifconfig "$@"
+		fi
+		ifconfig "$@"
 	fi
-	ifconfig "$@"
-    fi
 }
 
-do_iptables_restore() {
-    iptables-restore "$@"
+do_iptables_restore()
+{
+	iptables-restore "$@"
 }
 
-do_dnsmasq() {
+do_dnsmasq()
+{
 	if [ -f $KVM_BOOT_DNSMASQ_PID ]; then
 		echo "dnsmasq already running, try $0 -r"
 		exit
@@ -188,7 +191,8 @@ do_dnsmasq() {
 	echo "dnsmasq for kvm-boot spawned successfully!"
 }
 
-enable_ip_forward() {
+enable_ip_forward()
+{
 	SYSCTL_ARGS=""
 	if [ "$KVM_BOOT_VERBOSE" != "true" ]; then
 		SYSCTL_ARGS="-q"
@@ -220,27 +224,29 @@ add_filter_rules()
 	iptables -t nat -A POSTROUTING -s $KVM_BOOT_NETWORK/24 -o $KVM_BOOT_NETDEV -j MASQUERADE
 }
 
-start_dnsmasq() {
-    do_dnsmasq \
-	--strict-order \
-	--log-queries \
-	--except-interface=lo \
-	--no-dhcp-interface=$KVM_BOOT_NETDEV \
-	--interface=$1 \
-	--listen-address=$KVM_BOOT_GATEWAY \
-	--bind-interfaces \
-	--dhcp-range=$KVM_BOOT_DHCPRANGE \
-	--conf-file="" \
-	--dhcp-no-override \
-	--dhcp-leasefile=$KVM_BOOT_DNSMASQ_LEASE \
-	--pid-file=$KVM_BOOT_DNSMASQ_PID \
-	${KVM_BOOT_TFTPROOT:+"--enable-tftp"} \
-	${KVM_BOOT_TFTPROOT:+"--tftp-root=$KVM_BOOT_TFTPROOT"} \
-	${KVM_BOOT_BOOTP:+"--dhcp-boot=$KVM_BOOT_BOOTP"}
+start_dnsmasq()
+{
+	do_dnsmasq \
+		--strict-order \
+		--log-queries \
+		--except-interface=lo \
+		--no-dhcp-interface=$KVM_BOOT_NETDEV \
+		--interface=$1 \
+		--listen-address=$KVM_BOOT_GATEWAY \
+		--bind-interfaces \
+		--dhcp-range=$KVM_BOOT_DHCPRANGE \
+		--conf-file="" \
+		--dhcp-no-override \
+		--dhcp-leasefile=$KVM_BOOT_DNSMASQ_LEASE \
+		--pid-file=$KVM_BOOT_DNSMASQ_PID \
+		${KVM_BOOT_TFTPROOT:+"--enable-tftp"} \
+		${KVM_BOOT_TFTPROOT:+"--tftp-root=$KVM_BOOT_TFTPROOT"} \
+		${KVM_BOOT_BOOTP:+"--dhcp-boot=$KVM_BOOT_BOOTP"}
 }
 
-do_vdeswitch() {
-	# vde_switch in a daemon mode enters into an interactive
+do_vdeswitch()
+{
+	# vde_switch in daemon mode enters into an interactive
 	# shell which you can use. We put that session into a screen
 	# session which you can later attach to if you want.
 	if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
@@ -264,39 +270,41 @@ do_vdeswitch() {
 	fi
 }
 
-start_vdeswitch() {
-    LOOPS=4
-    TRY=0
+start_vdeswitch()
+{
+	LOOPS=4
+	TRY=0
 
-    do_vdeswitch \
-	-daemon \
-	-hub \
-	-tap $KVM_BOOT_TAP_DEV \
-	-mod 660 \
-	-group kvm \
-	-s $KVM_BOOT_VDE_SOCKET \
-	--pidfile $KVM_BOOT_VDE_SWITCH_PID
+	do_vdeswitch \
+		-daemon \
+		-hub \
+		-tap $KVM_BOOT_TAP_DEV \
+		-mod 660 \
+		-group kvm \
+		-s $KVM_BOOT_VDE_SOCKET \
+		--pidfile $KVM_BOOT_VDE_SWITCH_PID
 
-    while [[ $TRY -lt $LOOPS ]]; do
-	    if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
-                    if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
-			    echo "Waiting for $KVM_BOOT_VDE_SWITCH_PID ..."
-		    fi
-		    sleep 1
-		    let TRY=$TRY+1
-	    else
-		echo "vde_switch ready!"
-		break
-	    fi
-    done
+	while [[ $TRY -lt $LOOPS ]]; do
+		if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
+			if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
+				echo "Waiting for $KVM_BOOT_VDE_SWITCH_PID ..."
+			fi
+			sleep 1
+			let TRY=$TRY+1
+		else
+			echo "vde_switch ready!"
+			break
+		fi
+	done
 
-    if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
-	    echo "vde_switch process never started, bailing ... debug your setup"
-	    exit
-    fi
+	if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
+		echo "vde_switch process never started, bailing ... debug your setup"
+		exit
+	fi
 }
 
-setup_nat() {
+setup_nat()
+{
 	enable_ip_forward
 	add_filter_rules "$1"
 }
