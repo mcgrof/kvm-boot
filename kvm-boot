@@ -230,6 +230,7 @@ parse_args()
 
 setup_headers
 allow_user_defaults
+kvm_boot_exit_if_no_network_setup
 
 if [[ $# -eq 0 ]]; then
 	infer_latest_kernel

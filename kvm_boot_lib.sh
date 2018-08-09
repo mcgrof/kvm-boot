@@ -211,3 +211,35 @@ kvm_boot_warn_vde_switch_running()
 	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
 	echo
 }
+
+kvm_boot_net_require_warn_exit()
+{
+	echo "Your kvm-boot network is not setup, you need vde_switch"
+	echo "and dnsmasq running for this to work correctly. To start"
+	echo "run the following:"
+	echo
+	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
+	echo
+	exit 1
+}
+
+kvm_boot_check_network_active()
+{
+	kvm_boot_vde_switch_running
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	kvm_boot_dnsmask_running
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	return 0
+}
+
+kvm_boot_exit_if_no_network_setup()
+{
+	kvm_boot_check_network_active
+	if [ $? -ne 0 ]; then
+		kvm_boot_net_require_warn_exit
+	fi
+}
