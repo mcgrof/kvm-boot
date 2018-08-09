@@ -95,4 +95,8 @@ function allow_user_defaults()
 	if [ -z $KVM_BOOT_ISO ]; then
 		KVM_BOOT_ISO="$KVM_BOOT_ISO_PATH/opensuse/openSUSE-Leap-42.2-DVD-x86_64-Build0215-Media.iso"
 	fi
+
+	if [ -z $KVM_BOOT_VERBOSE ]; then
+		KVM_BOOT_VERBOSE="false"
+	fi
 }
