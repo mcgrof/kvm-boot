@@ -99,6 +99,7 @@ allow_user_defaults()
 	if [ -z $KVM_BOOT_VERBOSE ]; then
 		KVM_BOOT_VERBOSE="false"
 	fi
+	allow_user_defaults_network
 }
 
 allow_user_defaults_network()
@@ -172,4 +173,40 @@ allow_user_defaults_network()
 			KVM_BOOT_SYSTEMD_DNSMASQ_DIR=""
 		fi
 	fi
+}
+
+kvm_boot_dnsmask_running()
+{
+	if [ -f $KVM_BOOT_DNSMASQ_PID ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+kvm_boot_warn_dnsmasq_running()
+{
+	PID=$(cat $KVM_BOOT_DNSMASQ_PID)
+	echo "dnsmasq already running, PID: $PID, try running this to reset:"
+	echo
+	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
+	echo
+}
+
+kvm_boot_vde_switch_running()
+{
+	if [ -f $KVM_BOOT_VDE_SWITCH_PID ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+kvm_boot_warn_vde_switch_running()
+{
+	PID="$(cat $KVM_BOOT_VDE_SWITCH_PID)"
+	echo "vde_switch is already running on pid $PID, to reset run:"
+	echo
+	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
+	echo
 }

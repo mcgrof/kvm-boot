@@ -55,8 +55,9 @@ do_iptables_restore()
 
 do_dnsmasq()
 {
-	if [ -f $KVM_BOOT_DNSMASQ_PID ]; then
-		echo "dnsmasq already running, try $0 -r"
+	kvm_boot_dnsmask_running
+	if [ $? -eq 0 ]; then
+		kvm_boot_warn_dnsmasq_running
 		exit
 	fi
 
@@ -173,27 +174,26 @@ start_dnsmasq()
 
 do_vdeswitch()
 {
+	kvm_boot_vde_switch_running
+	if [ $? -eq 0 ]; then
+		kvm_boot_warn_vde_switch_running
+		exit 1
+	fi
+
 	# vde_switch in daemon mode enters into an interactive
 	# shell which you can use. We put that session into a screen
 	# session which you can later attach to if you want.
-	if [ ! -f $KVM_BOOT_VDE_SWITCH_PID ]; then
-		if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
-			echo Calling:
-			echo vde_switch "$@"
-		fi
+	if [ "$KVM_BOOT_VERBOSE" = "true" ]; then
+		echo Calling:
+		echo vde_switch "$@"
+	fi
 
-		# XXX: I can't find this screen session though :(
-		#export SCREENDIR=/run/screen/S-root
-		screen -S switch -dm vde_switch "$@"
-		if [ $? -ne 0 ]; then
-			echo "Failed to start vde_switch ... return value: $?"
-			exit
-		fi
-	else
-		PID="$(cat $KVM_BOOT_VDE_SWITCH_PID)"
-		echo "vde_switch is already running on pid $PID, try running"
-		echo "$0 with -r to reset fully".
-		exit 1
+	# XXX: I can't find this screen session though :(
+	#export SCREENDIR=/run/screen/S-root
+	screen -S switch -dm vde_switch "$@"
+	if [ $? -ne 0 ]; then
+		echo "Failed to start vde_switch ... return value: $?"
+		exit
 	fi
 }
 
@@ -295,7 +295,6 @@ parse_args()
 
 setup_headers
 allow_user_defaults
-allow_user_defaults_network
 
 parse_args $@
 
