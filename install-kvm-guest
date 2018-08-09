@@ -10,7 +10,7 @@ function setup_headers()
 	if [ -z $KVM_BOOT_LIB_DIR ]; then
 		KVM_BOOT_LIB_DIR=$(dirname $0)
 	fi
-	source $KVM_BOOT_LIB_DIR/kvm_boot_lib.sh
+	source $KVM_BOOT_LIB_DIR/lib.sh
 }
 
 function set_kvm_boot_install()

@@ -5,12 +5,14 @@
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
+source /etc/systemd/system/kvmboot/config
+
 setup_headers()
 {
 	if [ -z $KVM_BOOT_LIB_DIR ]; then
 		KVM_BOOT_LIB_DIR=$(dirname $0)
 	fi
-	source $KVM_BOOT_LIB_DIR/kvm_boot_lib.sh
+	source $KVM_BOOT_LIB_DIR/lib.sh
 }
 
 KERNEL=""

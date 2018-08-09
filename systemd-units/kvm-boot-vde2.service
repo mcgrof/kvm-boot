@@ -1,0 +1,35 @@
+[Unit]
+Description=kvm-boot vde_switch - switch setup
+Requires=network.target
+Wants=nss-lookup.target
+Before=nss-lookup.target
+After=network.target
+Before=kvm-boot-dnsmasq.service
+WantedBy=kvm-boot-dnsmasq.service
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/systemd/system/kvmboot/config
+ExecStartPre=
+
+# vde_switch in daemon mode enters into an interactive
+# shell which you can use. To connect to it you can use:
+#
+# vdeterm $KVM_BOOT_VDE_MGMT
+ExecStart=vde_switch \
+		-daemon \
+		-hub \
+		-tap ${KVM_BOOT_TAP_DEV} \
+		-mod 660 \
+		-group kvm \
+		-s ${KVM_BOOT_VDE_SOCKET} \
+		--mgmt ${KVM_BOOT_VDE_MGMT}
+ExecStartPost=/sbin/ip addr add ${KVM_BOOT_GATEWAY}/${KVM_BOOT_NETMASK} dev ${KVM_BOOT_TAP_DEV}
+ExecStartPost=/sbin/ip link set dev ${KVM_BOOT_TAP_DEV} up
+ExecStartPost=/etc/systemd/system/kvmboot/nat.sh
+ExecStop=/etc/systemd/system/kvmboot/nat.sh -k
+ExecStop=/bin/kill -9 $MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

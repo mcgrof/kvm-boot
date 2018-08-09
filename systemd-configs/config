@@ -1,0 +1,25 @@
+KVM_BOOT_LIB_DIR=/etc/systemd/system/kvmboot/
+
+KVM_BOOT_NETDEV=wlp3s0
+KVM_BOOT_TAP_DEV=kvmboot0
+
+# Network information, these are sane values, you can keep them
+# unless they intefere with your network, ie, if you already make use
+# of this subnet. If you don't use this subnet it should be fine.
+KVM_BOOT_NETWORK=192.168.53.0
+KVM_BOOT_NETMASK=255.255.255.0
+KVM_BOOT_GATEWAY=192.168.53.1
+KVM_BOOT_DHCPRANGE=192.168.53.2,192.168.53.254
+
+KVM_BOOT_DNSMASQ_CONFIG=/etc/systemd/system/kvmboot/dnsmasq.conf
+KVM_BOOT_DNSMASQ_RUN_DIR=/run/dnsmasq
+KVM_BOOT_DNSMASQ_PID=$KVM_BOOT_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_BOOT_TAP_DEV.pid
+KVM_BOOT_DNSMASQ_LEASE=/var/lib/misc/dnsmasq-$KVM_BOOT_TAP_DEV.leases
+
+KVM_BOOT_VDE_SOCKET=/var/run/vde-socket.ctl
+KVM_BOOT_VDE_MGMT=/var/run/vde.mgmt
+
+# Optionally parameters to enable PXE support
+KVM_BOOT_TFTPROOT=
+KVM_BOOT_BOOTP=
+KVM_BOOT_FIX_DNSMASQ_CONFLICT="false"

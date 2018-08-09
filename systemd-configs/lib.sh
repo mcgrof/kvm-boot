@@ -5,6 +5,8 @@
 # under the terms of copyleft-next (version 0.3.1 or later) as published
 # at http://copyleft-next.org/.
 
+source /etc/systemd/system/kvmboot/config
+
 setup_single_guest_defaults()
 {
 	if [ -z $KVM_BOOT_NEXT_TARGET ]; then
@@ -15,80 +17,6 @@ setup_single_guest_defaults()
 		KVM_BOOT_USE_NEXT_TARGET="-hdb $KVM_BOOT_NEXT_TARGET"
 	fi
 }
-
-allow_user_defaults_network()
-{
-	if [ -z $KVM_BOOT_NETDEV ]; then
-		KVM_BOOT_NETDEV=wlp3s0
-	fi
-
-	if [ -z $KVM_BOOT_TAP_DEV ]; then
-		KVM_BOOT_TAP_DEV=kvmboot0
-	fi
-
-	# Network information, these are sane values, you can keep them
-	# unless they intefere with your network, ie, if you already make use
-	# of this subnet. If you don't use this subnet it should be fine.
-	if [ -z $KVM_BOOT_NETWORK ]; then
-		KVM_BOOT_NETWORK=192.168.53.0
-	fi
-
-	if [ -z $KVM_BOOT_NETMASK ]; then
-		KVM_BOOT_NETMASK=255.255.255.0
-	fi
-
-	if [ -z $KVM_BOOT_GATEWAY ]; then
-		KVM_BOOT_GATEWAY=192.168.53.1
-	fi
-
-	if [ -z $KVM_BOOT_DHCPRANGE ]; then
-		KVM_BOOT_DHCPRANGE=192.168.53.2,192.168.53.254
-	fi
-
-	if [ -z $KVM_BOOT_DNSMASQ_RUN_DIR ]; then
-		KVM_BOOT_DNSMASQ_RUN_DIR=/var/run/dnsmasq
-	fi
-
-	if [ -z $KVM_BOOT_DNSMASQ_PID ]; then
-		KVM_BOOT_DNSMASQ_PID=$KVM_BOOT_DNSMASQ_RUN_DIR/qemu-dnsmasq-$KVM_BOOT_TAP_DEV.pid
-	fi
-
-	if [ -z $KVM_BOOT_VDE_SWITCH_PID ]; then
-		KVM_BOOT_VDE_SWITCH_PID=/var/run/qemu-vde.pid
-	fi
-
-	if [ -z $KVM_BOOT_DNSMASQ_LEASE ]; then
-		KVM_BOOT_DNSMASQ_LEASE=/var/lib/misc/qemu-dnsmasq-$KVM_BOOT_TAP_DEV.leases
-	fi
-
-	# Optionally parameters to enable PXE support
-	if [ -z $KVM_BOOT_TFTPROOT ]; then
-		KVM_BOOT_TFTPROOT=
-	fi
-
-	if [ -z $KVM_BOOT_BOOTP ]; then
-		KVM_BOOT_BOOTP=
-	fi
-
-	if [ -z $KVM_BOOT_FIX_DNSMASQ_CONFLICT ]; then
-		KVM_BOOT_FIX_DNSMASQ_CONFLICT="false"
-	fi
-
-	KVM_BOOT_SYSTEMD_USED="false"
-	ps -ef | grep -q systemd
-	if [ $? -eq 0 ]; then
-		KVM_BOOT_SYSTEMD_USED="true"
-	fi
-
-	KVM_BOOT_SYSTEMD_DNSMASQ_DIR=""
-	if [ "$KVM_BOOT_SYSTEMD_USED" = "true" ]; then
-		KVM_BOOT_SYSTEMD_DNSMASQ_DIR=$(systemctl status dnsmasq.service | grep "\-7" | awk -F"-7" '{print $2}' | awk '{print $1}' | awk -F"," '{print $1}')
-		if [ ! -d $KVM_BOOT_SYSTEMD_DNSMASQ_DIR ]; then
-			KVM_BOOT_SYSTEMD_DNSMASQ_DIR=""
-		fi
-	fi
-}
-
 
 allow_user_defaults()
 {
@@ -173,63 +101,25 @@ allow_user_defaults()
 	if [ -z $KVM_BOOT_VERBOSE ]; then
 		KVM_BOOT_VERBOSE="false"
 	fi
-	allow_user_defaults_network
-}
-
-kvm_boot_dnsmask_running()
-{
-	if [ -f $KVM_BOOT_DNSMASQ_PID ]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
-kvm_boot_warn_dnsmasq_running()
-{
-	PID=$(cat $KVM_BOOT_DNSMASQ_PID)
-	echo "dnsmasq already running, PID: $PID, try running this to reset:"
-	echo
-	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
-	echo
-}
-
-kvm_boot_vde_switch_running()
-{
-	if [ -f $KVM_BOOT_VDE_SWITCH_PID ]; then
-		return 0
-	else
-		return 1
-	fi
-}
-
-kvm_boot_warn_vde_switch_running()
-{
-	PID="$(cat $KVM_BOOT_VDE_SWITCH_PID)"
-	echo "vde_switch is already running on pid $PID, to reset run:"
-	echo
-	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
-	echo
 }
 
 kvm_boot_net_require_warn_exit()
 {
 	echo "Your kvm-boot network is not setup, you need vde_switch"
 	echo "and dnsmasq running for this to work correctly. To start"
-	echo "run the following:"
+	echo "enable and start the systemd service:"
 	echo
-	echo "sudo -E $KVM_BOOT_LIB_DIR/setup-kvm-switch -r"
-	echo
+	echo   * kvm-boot-dnsmasq.service
 	exit 1
 }
 
 kvm_boot_check_network_active()
 {
-	kvm_boot_vde_switch_running
+	systemctl status kvm-boot-vde2.service
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
-	kvm_boot_dnsmask_running
+	systemctl status kvm-boot-dnsmasq.service
 	if [ $? -ne 0 ]; then
 		return 1
 	fi

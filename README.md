@@ -411,7 +411,7 @@ does not. If you boot and it does not work try booting again. What the
 underlying issues is, is not clear.
 
 Additionally adding or removing multiple console= lines onto the qemu append
-line (see KVM_BOOT_KERNEL_APPEND on kvm_boot_lib.sh) can often also change
+line (see KVM_BOOT_KERNEL_APPEND on lib.sh) can often also change
 behaviour, sometimes *never* allowing console to be used to log in.
 
 Some of these issues seem to be known upstream, for details refer to:

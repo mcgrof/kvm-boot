@@ -1,0 +1,21 @@
+[Unit]
+Description=kvm-boot dnsmasq
+Requires=network.target
+Wants=nss-lookup.target
+Requires=kvm-boot-vde2.service
+Before=nss-lookup.target
+After=network.target
+After=kvm-boot-vde2.service
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/systemd/system/kvmboot/config
+
+# Test the config file and refuse starting if it is not valid.
+ExecStartPre=/usr/sbin/dnsmasq --test -C ${KVM_BOOT_DNSMASQ_CONFIG}
+ExecStart=/sbin/dnsmasq -C ${KVM_BOOT_DNSMASQ_CONFIG}
+ExecStop=/bin/kill -9 $MAINPID
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

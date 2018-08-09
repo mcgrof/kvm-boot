@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# kvm-boot user configuration file. Install this into your ~/ as a regular
+# user to use kvm-boot.
+
+source /etc/systemd/system/kvmboot/config
+
+# We can use a directory per guest.
+DATA_DIR="/opt/qemu/linux417-xfs"
+
+# Note: Ubuntu's qemu does not enable vde on its build configuration, as such,
+# if you are using Ubuntu, you'll have to rebuild qemu and use:
+#
+# ./configure --enable-vde
+
+# Debian does enable it :) Either way, if you are using your own custom
+# built qemu you can override the path below.
+#export KVM_BOOT_QEMU=/usr/local/bin/qemu-system-x86_64
+
+export KVM_BOOT_MEM="8192"
+export KVM_BOOT_CPUS="4"
+
+# qemu-img create debian-x86_64.qcow2 45G
+export KVM_BOOT_TARGET=${DATA_DIR}/debian-x86_64.qcow2
+
+# For xfstests you may want to use these:
+# qemu-img create dev.qcow2     40G - used for your development git trees
+# qemu-img create scratch.qcow2 60G - used for xfstest to trash
+export KVM_BOOT_EXTRA_DEV_0001="-hdc ${DATA_DIR}/dev.qcow2 -hdd ${DATA_DIR}/scratch.qcow2"
