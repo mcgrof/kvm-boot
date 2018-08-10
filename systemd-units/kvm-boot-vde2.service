@@ -18,7 +18,6 @@ ExecStartPre=
 # vdeterm $KVM_BOOT_VDE_MGMT
 ExecStart=vde_switch \
 		-daemon \
-		-hub \
 		-tap ${KVM_BOOT_TAP_DEV} \
 		-mod 660 \
 		-group kvm \
