@@ -32,7 +32,7 @@ str_to_hex()
 str_to_mac()
 {
 	INPUT=$1
-	FILE=$(basename $INPUT)
+	FILE=$INPUT
 	MAC="52:54:00:"
 	COUNT=0
 	hex=$(str_to_hex $FILE)
