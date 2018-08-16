@@ -6,61 +6,100 @@ and want to test kernel compiles fast with an extremely lightweight and very
 easy to read simple test script. It is currently x86_64 biased, however some
 initial tests have been done to make it work with other architectures.
 
-Getting linux-next
-------------------
-
-Using linux-next should let you do development on any part of the Linux kernel
-and submit patches for that respective subsystem. It avoid you having to clone
-tons of separate branches.
-
-	git clone https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-
-When doing development you can do:
-
-	git checkout -b 20160608-mytopic next-20160608
-
-Each day after this just do, for example on 20160609:
-
-	git fetch
-	git checkout -b 20160609-mytopic
-	git branch --set-upstream-to=origin/master 20160609-mytopic
-	git rebase --onto origin/master
-
-This will keep locally all of your old development branches and let you keep
-rolling with the latest development tress bunched together into one.
-
 Build
 -----
 
-There are not build requirements. Its all shell.
+There are not build requirements. Its all shell and two systemd units.
+
+Install dependencies
+--------------------
+
+kvm-boot requiers vde2, dnsmasq iptables, and qemu. The version of qemu
+requires vde enabled, this is enabled on most distribution versions of qemu
+except Ubuntu. If you are on Ubuntu then, you'll have to build qemu yourself
+with vde enabled.
+
+``` bash
+sudo apt-get install dnsmasq vde2 qemu-system-x86
+```
 
 Install
 -------
 
 Just run:
 
-	$ cd ~/devel/kvm-boot/
-	$ make install
+``` bash
+cd ~/devel/kvm-boot/
+sudo make install
+make install
+```
 
-Setup
------
+Rootless KVM use
+----------------
 
-# Networking setup
+kvm-boot aims to enable non-root users to use qemu to boot into a virtualized
+guest. You will want to enable use of kvm for users. Typically this can be done
+by letting the user be part of the kvm group. This will be important also for
+networking purposes, in particular you will want the /var/run/vde-socket.ctl
+directory owned by kvm group, and files created as well. Using the sticky bit
+should suffice.
 
-When you decide you need to spawn guests just run this prior to spawning guests:
+Avoiding dnsmasq conflicts
+--------------------------
 
-	$ sudo -E ~/bin/setup-kvm-switch
+Most modern Linux distributions these days have dnsmasq installed and use it
+as a DNS cache. The default setup for some of these deployments of dnsmsasq is
+for the service to be greedy and start a DNS service on all interfaces that
+come up. This will create a conflict for kvm-boot as it creates a TAP interface
+with vde2 for the switch interface, which is then also used for DNS and DHCP
+for the guests.
 
-You may need to just set the environment variable KVM_BOOT_NETDEV with
-whatever interface you use for your connection to the Internet, and after
-this after spawning you should see:
+Likewise, some VPN setup configurations rely and use dnsmasq for DNS so that
+DNS requests for its VPN only go to certain hosts. These setups may conflict
+with our TAP inteface.
 
-	Setting up switch on tap0
-	net.ipv4.ip_forward = 1
+If your have other dnsmasq deployments on your system running you must ensure
+they avoid using the TAP interface we are creating. You can for instance do
+this on Debian by having the the file /etc/dnsmasq.d/kvm-boot as its instance
+of dnsmasq runs with `-7 /etc/dnsmasq.d` which tells dnsmasq to look for any
+file in that directory for its configuration.
 
-If that does not work refer to the section: "Overriding defaults with
-environment variables for setup-kvm-switch" below for more environment
-variables you might need to fine tune.
+``` bash
+cat /etc/dnsmasq.d/kvm-boot
+bind-interfaces
+except-interface=kvmboot0
+```
+
+Configuration
+-------------
+
+Now edit these files and modify variables as needed:
+
+``` bash
+/etc/systemd/system/kvmboot/config
+/etc/systemd/system/kvmboot/dnsmasq.conf
+~/.kvmboot-setup
+```
+
+These variables are documented below in different respective sections. A full
+list of all used variables are toward the end of this document. The user file
+.kvmboot-setup lets you both setup defaults for different users, and reveals
+how a simple shell script which tunes a just one variable $DATA_DIR can let you
+boot a different guest. Upon user installation `make install`, your .bashrc
+is extended to source .kvmboot-setup. The idea with this is you will configure
+that will your default guest. You can use custom scripts which modify the
+DATA_DIR variable which would boot different guests.
+
+# Networking setup - vde2 and dnsmasq
+
+Having kvm-boot-dnsmasq.service start will kick off kvm-boot-vde2.service for
+you, you need to get both running to get networking functional. It creates a
+switch which your guests to share. The reason we use vde2 for switching is
+other network setups rely on bridging and bridging does not work if your main
+interface to the internet is a wireless interface.
+
+You will need to just set the configuration with KVM_BOOT_NETDEV with
+whatever interface you use for your connection to the Internet.
 
 That should get your system setup for networking. It will allow your guests to
 run using DHCP with full networking. Your hosts will have a functional access
@@ -72,28 +111,29 @@ variables.
 
 Suppose your laptop has a connection to the internet but also uses a tun
 interface for VPN, so your VPN interface is tun0. If you wanted to share that
-you can also do so with the guests, set the environment variable
-KVM_BOOT_NETDEV_VPN with the VPN interface. You can therefore share both
-your internet and VPN setup the guest. For example, say you have a wifi
-setup and are also connected to a VPN you can share both as follows:
+you can also do so with the guests, set the variable on the configuration
+files or override with the local user .kvmboot-setup file, KVM_BOOT_NETDEV_VPN
+with the respective VPN interface. You can therefore share both your internet
+and VPN setup the guest. For example, say you have a wifi setup and are also
+connected to a VPN you can share both as follows:
 
-	# export KVM_BOOT_NETDEV=wlp2s0
-	# export KVM_BOOT_NETDEV_VPN=tun0
-	./setup-kvm-switch
-	Setting up switch on tap0
-	Setting up switch on wlp2s0
-	net.ipv4.ip_forward = 1
+	KVM_BOOT_NETDEV=wlp2s0
+	KVM_BOOT_NETDEV_VPN=tun0
 
 Your guests should magically now also be able to share the VPN and your local
 network with your guest.
 
-# KVM use for users
+Systemd unit setup
+------------------
 
-You will want to enable use of kvm for users. Typically this can be done
-by letting the user be part of the kvm group. This will be important also
-for networking purposes, in particular you will want the /var/run/qemu-vde.ctl
-directory owned by kvm group, and files created as well. Using the sticky
-bit should suffice.
+Be sure to edit the configuration files as needed first. Then proceed with
+this section.
+
+``` bash
+sudo systemctl enable kvm-boot-vde2.service
+sudo systemctl enable kvm-boot-dnsmasq.service
+sudo systemctl start kvm-boot-dnsmasq.service
+```
 
 Usage
 -----
@@ -115,13 +155,13 @@ disk:
 Previously kvm-boot used to set defaults for the target and secondary
 development target, however this is not safe if you are using multiple
 guests, as such this is no longer done. If you do want to set the defaults
-alwas set the environment variable KVM_BOOT_SINGLE_GUEST=true.
+always set the environment variable KVM_BOOT_SINGLE_GUEST=true.
 
 Additionally if you are working on qemu development you can always use:
 
 	$ kvm-boot -d # use $HOME/devel/qemu/x86_64-softmmu/qemu-system-x86_64
 
-# Overriding defaults with environment variables for kvm-boot
+# User ~/.kvmboot-setup file
 
 You can override many default parameters by just using environment variables.
 We enable this mechanism to be able to allow for customizations without
@@ -129,7 +169,12 @@ expanding on the number of supported arguments for all possible parameters we
 may pass to qemu.
 
 The list of variables you can override are viewable on the function
-allow_user_defaults() on kvm-boot, we list them and document them here:
+allow_user_defaults() on kvm-boot, they are also listed below.
+
+kvm-boot configuration variables
+--------------------------------
+
+Below are the list of all kvm-boot configuration variables.
 
   * KVM_BOOT_SINGLE_GUEST: set if you want to indicate to kvm-boot that you
     will only use a single guests. This will set some default variables
@@ -159,7 +204,7 @@ allow_user_defaults() on kvm-boot, we list them and document them here:
     based on the basename of the target file. For details on that
     implementation refer to str_to_mac().
 
-# Overriding defaults with environment variables for setup-kvm-switch
+# vde2 and dnsmask configuration
 
 Network configuration support is provided by setting up a switch using one
 of you networking interfaces which has network connectivity, and using dnsmasq
@@ -182,7 +227,7 @@ a few basic ones you might need to change for now.
   * KVM_BOOT_DNSMASQ_RUN_DIR: the run directory your dnsmasq prefers to use. This
     defaults to /var/lib/dnsmasq/
 
-# Overriding defaults with environment variables for install-kvm-guest
+# install-kvm-guest configuration
 
 As an alternative to using command like arguments with install-kvm-guest you
 can use environment variables. Some of the basic environment variables used for
@@ -191,24 +236,14 @@ kvm-boot are also used with install-kvm-guest.
   * KVM_BOOT_ISO_PATH: path where your isos are located
   * KVM_BOOT_ISO: ISO to use for installation
 
-# Example minimum .bashrc settings
+# Extended .bashrc
 
-You really might only need to set thes on your .bashrc to get this to work right
-away:
+Upon `make install` we source .kvmboot-setup for you, this is:
 
-	export KVM_BOOT_NETDEV=eth0
-	export KVM_BOOT_TARGET=/opt/qemu/debian-x86_64.qcow2
-	export KVM_BOOT_NEXT_TARGET=/opt/qemu/mcgrof-dev-20170605.img
-
-Requirements
-------------
-
-You should have installed on your development system where you will
-run guests from:
-
-  * vde2
-  * dnsmasq
-  * iptables
+``` bash
+test -s ~/.kvmboot-setup && . ~/.kvmboot-setup || true
+```
+If you want to use kvm-boot as another user, follow similar practice.
 
 Project goals
 -------------
@@ -232,6 +267,32 @@ Project goals
   * We *do not* want to deal with the complex network bridge setup
   * We *do not* want to deal with complex test infrastructure
   * We *do not* want to deal with fancy GUI crap
+
+Development flow with linux-next
+--------------------------------
+
+Since our focus is for Linux kernel development below are some recipes which
+developers can follow to hack on Linux with linux-next.
+
+Using linux-next should let you do development on any part of the Linux kernel
+and submit patches for that respective subsystem. It avoids you having to clone
+tons of separate branches.
+
+	git clone https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+
+When doing development you can do:
+
+	git checkout -b 20160608-mytopic next-20160608
+
+Each day after this just do, for example on 20160609:
+
+	git fetch
+	git checkout -b 20160609-mytopic
+	git branch --set-upstream-to=origin/master 20160609-mytopic
+	git rebase --onto origin/master
+
+This will keep locally all of your old development branches and let you keep
+rolling with the latest development tress bunched together into one.
 
 The two methods to boot guests
 ------------------------------
@@ -325,23 +386,25 @@ localmodconfig' and this could break if modules are renamed upstream or if
 config values change over time. Using a recent kernel will try to keep our
 resulting configuration on par with what your distribution provided.
 
-	cd ~/linux-next/
-	cp /boot/config-$(uname -r) .config
-	cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
+``` bash
+cd ~/linux-next/
+cp /boot/config-$(uname -r) .config
+cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
 
-	# Reduce the kernel configuration to require only what your local system
-	# needs. If you compile now this *should* work on your system.
-	make localmodconfig
+# Reduce the kernel configuration to require only what your local system
+# needs. If you compile now this *should* work on your system.
+make localmodconfig
 
-	# Now merge the KVM guest requirements we recommend due to module
-	# issues.
-	./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+# Now merge the KVM guest requirements we recommend due to module
+# issues.
+./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
 
-	# Now compile away ! And then install
-	make -j 4
+# Now compile away ! And then install
+make -j 4
 
-	# this method of installing is documented further below
-	sudo make modules_install install
+# this method of installing is documented further below
+sudo make modules_install install
+```
 
 You don't have to boot into this new kernel on your system/laptop/whatever
 system you are building from, but you *can* try if you want to -- this may work
@@ -359,7 +422,9 @@ not captured in piggy-x86-64-next.config which you do need.
 
 Now just try booting the damn guest !
 
+``` bash
 	kvm-boot
+```
 
 Your tty may or may not work, notes on this below. What you really want is to
 get networking working, so somehow ensure you can get the guest IP address and
@@ -377,21 +442,27 @@ your own local system. If that's the case then first boot into the guest in
 a more reliable way, using qcow2 for instance. Then, do git clone of linux-next,
 and then do:
 
-	cd ~/linux-next/
-	cp /boot/config-$(uname -r) .config
-	cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
-	make localmodconfig
+``` bash
+cd ~/linux-next/
+cp /boot/config-$(uname -r) .config
+cp ~/devel/kvm-boot/configs/piggy-x86-64-next.config .
+make localmodconfig
+```
 
 The resulting kernel configuration can now be used as a base. scp that file out
 onto your local system and then use scripts/kconfig/merge_config.sh to ensure
 you enable as built-in a few key config options:
 
-	./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+``` bash
+./scripts/kconfig/merge_config.sh -m .config piggy-x86-64-next.config
+```
 
 Now build and install:
 
-	make -j 4
-	sudo make modules_install install
+``` bash
+make -j 4
+sudo make modules_install install
+```
 
 This kernel build will for sure build much faster, however it will very likely
 not boot on your local system. Be sure to avoid booting into it on your system.
@@ -399,8 +470,10 @@ If you'd like to distinguish these builds somehow you can use any file with
 the prefix "localversion-" on the ~/linux-next/ build directory. For instance
 I use: localversion-mcgrof and it has the following contents:
 
-	$ cat localversion-wireless
-	-mcgrof-piggy-dev
+``` bash
+$ cat localversion-wireless
+-mcgrof-piggy-dev
+```
 
 ## Issues with qemu tty
 
@@ -434,8 +507,10 @@ with local distribution shenanigans.
 You should always be able to compile and install a kernel as follows on any
 Linux distribution:
 
+``` bash
 	$ make
 	$ sudo make modules_install install
+```
 
 If doing this often creates too much clutter on /boot/ consider using the
 install-next-kernel.sh provided in this project.
@@ -471,10 +546,12 @@ To demo the issue, first try the kernel configuration recommend under
 the above section "Direct file kernel configuration", then try a secondary
 kernel configuration as follows:
 
-	cd ~/linux-next/
-	# Now enable everything from both latpop / guest as built-in
-	make localyesconfig
-	sudo make modules_install install
+``` bash
+cd ~/linux-next/
+# Now enable everything from both latpop / guest as built-in
+make localyesconfig
+sudo make modules_install install
+```
 
 Try booting into that either on your laptop or guest. If you see something
 as follows, this is the issue described:
@@ -492,11 +569,15 @@ Since kvm-boot is a distribution agnostic solution we assume the developer can
 always (regardless of what distribution they are using) can simply always
 install kernels and modules you have compiled with:
 
-	$ make -j 4 # compile kernel and modules
+``` bash
+$ make -j 4 # compile kernel and modules
+```
 
 And then install the kernel and initramfs as follows:
 
-	$ sudo make modules_install install  # installs kernel and initramfs
+``` bash
+$ sudo make modules_install install  # installs kernel and initramfs
+```
 
 Distribution packaging solutions (rpm, deb) use this target and should rely
 on /sbin/installkernel anyway. Intalling kernel/modules using distribution
@@ -515,7 +596,9 @@ By default kvm-boot will look for the latest installed kernel / initramfs on
 If you want to be explicit about using the latest kernel found on /boot you
 can always use:
 
-	$ kvm-boot -l
+``` bash
+$ kvm-boot -l
+```
 
 # Disk images
 
@@ -544,45 +627,50 @@ enough to to also carry your /boot/, we'll practice to keep it small using
 the script install-next-kernel.sh on the guest when installing kernels.
 This assumes you are using linux-next.git for your development work flow.
 
-	$ qemu-img create -f qcow2 /opt/qemu/some.img 6G
-
+``` bash
+$ qemu-img create -f qcow2 /opt/qemu/some.img 6G
+```
 ### qcow2 Linux kernel development image
 
 You'll want a secondary image you can use with much larger size so you can use
 it for stashing your linux kernel sources.
 
-	$ qemu-img create -f qcow2 /opt/qemu/linux-next.qcow2 50G
+``` bash
+$ qemu-img create -f qcow2 /opt/qemu/linux-next.qcow2 50G
+```
 
 To copy over the linux sources you can do from the host:
 
-	$ sudo modprobe nbd max_part=16
-	$ sudo qemu-nbd -c /dev/nbd0 /opt/qemu/linux-next.qcow2
-	# Create primary parition and take up all the space
-	$ sudo fdisk /dev/nbd0
-		Command (m for help): n
-		...
-		Select (default p): p
-		...
-		Partition number (1-4, default 1): 1
-		...
-		First sector (2048-20971519, default 2048): 
-		...
-		Last sector, +sectors or +size{K,M,G,T,P} (2048-20971519, default 20971519): 
-		...
-		Command (m for help): t
-		...
-		Partition type (type L to list all types): 83
-		...
-		Command (m for help): w
-	$ sudo partprobe /dev/nbd0
-	$ sudo mkfs.ext4 /dev/nbd0p1
-	$ sudo mkdir -p /mnt/linux-next
-	$ sudo mount /dev/nbd0p1 /mnt/linux-next
-	$ sudo cp -a ~/linux-next/ /mnt/linux-next
-	$ sudo umount /mnt/linux-next
-	$ sudo qemu-nbd -d /dev/nbd0
-	# nbd has buggy suspend/resume, better remove it
-	$ sudo modprobe -r nbd
+``` bash
+$ sudo modprobe nbd max_part=16
+$ sudo qemu-nbd -c /dev/nbd0 /opt/qemu/linux-next.qcow2
+# Create primary parition and take up all the space
+$ sudo fdisk /dev/nbd0
+	Command (m for help): n
+	...
+	Select (default p): p
+	...
+	Partition number (1-4, default 1): 1
+	...
+	First sector (2048-20971519, default 2048): 
+	...
+	Last sector, +sectors or +size{K,M,G,T,P} (2048-20971519, default 20971519): 
+	...
+	Command (m for help): t
+	...
+	Partition type (type L to list all types): 83
+	...
+	Command (m for help): w
+$ sudo partprobe /dev/nbd0
+$ sudo mkfs.ext4 /dev/nbd0p1
+$ sudo mkdir -p /mnt/linux-next
+$ sudo mount /dev/nbd0p1 /mnt/linux-next
+$ sudo cp -a ~/linux-next/ /mnt/linux-next
+$ sudo umount /mnt/linux-next
+$ sudo qemu-nbd -d /dev/nbd0
+# nbd has buggy suspend/resume, better remove it
+$ sudo modprobe -r nbd
+```
 
 This image is exposed to the kvm-boot guest kernel we boot later as a secondary
 disk, using qemu -hdb parameter.
@@ -593,9 +681,11 @@ install-kvm-guest scripts can help you install an ISO image onto a target qcow2
 image file, with a fully functionaly network in place, and exposing the
 linux-next development target image as a secondary disk. Example use:
 
-	$ ./install-kvm-guest -i /opt/isos/some.iso \
-			      -t /opt/qemu/some.img \
-			      -n /opt/qemu/linux-next.qcow2
+``` bash
+$ ./install-kvm-guest -i /opt/isos/some.iso \
+		      -t /opt/qemu/some.img \
+		      -n /opt/qemu/linux-next.qcow2
+```
 
 That will by defalut use SDL to kick off your installation. Follow the steps to
 install the guest, be sure to install and enable SSH, some distros disable this
@@ -610,9 +700,11 @@ to modify the fact that you just want the larger disk to be used for a home
 subdirectory for you. So you may want to just skip the -n option and use: -n
 none:
 
-	$ ./install-kvm-guest -i /opt/isos/some.iso \
-			      -t /opt/qemu/some.img \
-			      -n none
+``` bash
+$ ./install-kvm-guest -i /opt/isos/some.iso \
+		      -t /opt/qemu/some.img \
+		      -n none
+```
 
 If you do this can later expose the disk on a second boot and configure it to
 be mounted on $HOME/$USER/data as follows on /etc/fstab:
@@ -665,23 +757,27 @@ Some systems (SLE11-SP4) uses agetty, its not much different:
 
 On systemd this is done as follows (>= SLE12-SP2):
 
-	systemctl enable console-getty.service getty@ttyS0.service
-	systemctl enable console-getty.service getty@ttyS1.service
-	systemctl enable console-getty.service getty@ttyS2.service
+``` bash
+systemctl enable console-getty.service getty@ttyS0.service
+systemctl enable console-getty.service getty@ttyS1.service
+systemctl enable console-getty.service getty@ttyS2.service
 
-	systemctl start getty@ttyS0.service
-	systemctl start getty@ttyS1.service
-	systemctl start getty@ttyS2.service
+systemctl start getty@ttyS0.service
+systemctl start getty@ttyS1.service
+systemctl start getty@ttyS2.service
+```
 
 On SLE12-SP1 you can do:
 
-	systemctl enable serial-getty@ttyS0.service getty@ttyS0.service
-	systemctl enable serial-getty@ttyS1.service getty@ttyS1.service
-	systemctl enable serial-getty@ttyS2.service getty@ttyS2.service
+``` bash
+systemctl enable serial-getty@ttyS0.service getty@ttyS0.service
+systemctl enable serial-getty@ttyS1.service getty@ttyS1.service
+systemctl enable serial-getty@ttyS2.service getty@ttyS2.service
 
-	systemctl start serial-getty@ttyS0.service
-	systemctl start serial-getty@ttyS1.service
-	systemctl start serial-getty@ttyS2.service
+systemctl start serial-getty@ttyS0.service
+systemctl start serial-getty@ttyS1.service
+systemctl start serial-getty@ttyS2.service
+```
 
 It is *imperative* that yo do not screw up and re-use one label or device name
 above, for instance if you use ttyS0 twice things will not work. Likewise for
@@ -723,7 +819,9 @@ work as [serial is documented on TLDP for grub 0.97], however in practice this
 does not seem to work. As such if you really need to pick kernels when booting
 with grub 0.97 and kvm-boot you should just consider enabling
 
-	KVM_BOOT_ENABLE_GRAPHICS=true
+``` bash
+KVM_BOOT_ENABLE_GRAPHICS=true
+```
 
 This will ensure you get a boot prompt through the qemu SDL interface.
 
@@ -758,25 +856,72 @@ We purposely redirect two ttys to a PTS so you can then use screen to attach
 to them (root should not be required). You can also get access to the qemu
 control interface using screen as well:
 
-	$ screen /dev/pts/9
-	$ screen /dev/pts/11
-	$ screen /dev/pts/12
+``` bash
+$ screen /dev/pts/9
+$ screen /dev/pts/11
+$ screen /dev/pts/12
+```
 
 ## Determing your guest IP
+
+There are two ways to determine your guest IP address. They are documented
+below.
+
+## Modify guest /etc/issue
+
+You can read the IP address from the output of the tty console.
+
+The getty application you use can interpret special characters and spit them
+out to the console for you, you tell your getty application what to print using
+the /etc/issue file. Below is an example file which you can use if your
+distribution uses agetty for the tty, and what it ends up printing:
+
+``` bash
+mcgrof@linux417-xfs ~ $ cat /etc/issue
+
+IPv4 address: \4
+IPv6 address: \6
+Kernel: \v
+
+Debian GNU/Linux buster/sid \n \l
+```
+It prints something like this:
+
+```
+IPv4 address: 192.168.53.19
+IPv6 address: fe80::5054:ff:fe57:a1b2
+Kernel: #1 SMP Debian 4.17.8-1 (2018-07-20)
+
+Debian GNU/Linux buster/sid linux417-xfs ttyS0
+
+linux417-xfs login: 
+```
+
+## dnsmasq.leases
 
 Depending on the version of dnsmasq you use, the path to the lease file may
 change. We use the default which for me is:
 
-	cat /var/lib/misc/dnsmasq.leases
+``` bash
+cat /var/lib/misc/dnsmasq.leases
+```
 
 You can cat this file or:
 
-	tail -f /var/lib/misc/dnsmasq.leases
+```
+tail -f /var/lib/misc/dnsmasq.leases
+```
 
-As the guest boots to see what IP it ends up with. Alternatively you can
-use nmap:
+As the guest boots to see what IP it ends up with.
 
-	nmap -sP 192.168.53.0/24
+
+## Using nmap
+
+Alternatively you can use nmap:
+
+``` bash
+nmap -sP 192.168.53.0/24
+```
 
 ## Sshing into your guest image
 
@@ -828,10 +973,12 @@ be buggy), you can use stty to query tty settings that you should use in case
 what you have specified on boot through grub did not go through for on reason
 or another.
 
-	root@piggy:~# stty -F /dev/ttyS1
+``` bash
+root@piggy:~# stty -F /dev/ttyS1
 	speed 115200 baud; line = 0;
 	-brkint ixoff -imaxbel iutf8
 	-iexten
+```
 
 This confirms that my ttyS1 was setup correctly as I expected it with 115200
 baud rate. If this is different from what you specified on your grub
@@ -863,45 +1010,43 @@ This tells you, that you can control the qemu guest via the qemu monitor
 interface using /dev/pts/9. To trigger a suspend on a guest you either use the
 respective userspace tools depending on what init system is used:
 
-	# Old init
-	root@piggy:~# pm-suspend
-	# On systemd, suspends to ram
+``` bash
+# Old init
+root@piggy:~# pm-suspend
+# On systemd, suspends to ram
 
-	# These may fail.. enabled via distro choice it seems ?
-	root@piggy:~# systemctl hibernate
-	Failed to hibernate system via logind: Sleep verb not supported
-	root@piggy:~# systemctl hybrid-sleep
-	Failed to put system into hybrid sleep via logind: Sleep verb not supported
+# These may fail.. enabled via distro choice it seems ?
+root@piggy:~# systemctl hibernate
+Failed to hibernate system via logind: Sleep verb not supported
+root@piggy:~# systemctl hybrid-sleep
+Failed to put system into hybrid sleep via logind: Sleep verb not supported
+```
 
 If you want to disregard the preferred userspace tool way, you can do force
 suspend to ram or disk as follows:
 
-	# To query what options are available
-	root@piggy:~# cat /sys/power/state
-	freeze mem disk
+``` bash
+# To query what options are available
+root@piggy:~# cat /sys/power/state
+freeze mem disk
 
-	# To trigger suspend to ram
-	root@piggy:~# echo mem > /sys/power/state
+# To trigger suspend to ram
+root@piggy:~# echo mem > /sys/power/state
 
-	# To resume the target, from your hypervisor you can issue the following
-	# command to the pts on the control interface for the qemu instance,
-	# note that this qemu interface may be a bit buggy and often you may
-	# need to issue this command up to 4 times:
-	$ echo system_wakeup | socat - /dev/pts/9,raw,echo=0,crnl
+# To resume the target, from your hypervisor you can issue the following
+# command to the pts on the control interface for the qemu instance,
+# note that this qemu interface may be a bit buggy and often you may
+# need to issue this command up to 4 times:
+$ echo system_wakeup | socat - /dev/pts/9,raw,echo=0,crnl
 
-	# I guess this is hibernate, however my targets immediately resume.
-	root@piggy:~# echo disk > /sys/power/state
+# I guess this is hibernate, however my targets immediately resume.
+root@piggy:~# echo disk > /sys/power/state
+```
 
 TODO
 ----
-
-  * Add iptables setup option to setup-kvm-switch which will also enable to
-    use both VPN and local internet access, without having to switch between
-    two devices as described in the section 'Switching between localnet and vpn'
   * Document how to get direct raw access to disk for filesystem benchmarking and
     testing.
-  * Make sure the above intructions work for most distributions and adjust as
-    needed
   * If a target uses GRUB_TERMINAL=serial or GRUB_TERMINAL=console you will
     have your immediate stdout contended with the grub prompt so there will be
     only a small period of time you could capture the output of the actually
