@@ -115,11 +115,11 @@ kvm_boot_net_require_warn_exit()
 
 kvm_boot_check_network_active()
 {
-	systemctl status kvm-boot-vde2.service
+	systemctl is-active kvm-boot-vde2.service
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
-	systemctl status kvm-boot-dnsmasq.service
+	systemctl is-active kvm-boot-dnsmasq.service
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
